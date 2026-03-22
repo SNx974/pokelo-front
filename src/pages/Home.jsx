@@ -78,23 +78,18 @@ function HeroSection({ user }) {
           </p>
         </div>
 
-        {/* Queue cards */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {/* Queue cards + Lucario */}
+        <div className="relative flex items-center gap-4 mb-6">
           {/* Solo Queue */}
           <div
             role="button" tabIndex={0}
             onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
-            className={`queue-card queue-card-solo text-left p-5 ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
-                <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
-                <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
-              </div>
-              <div className="flex gap-1 text-4xl opacity-70 ml-2">
-                <span>🦊</span><span>🔵</span>
-              </div>
+            className={`queue-card queue-card-solo text-left p-5 flex-1 ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
+            <div>
+              <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
+              <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
+              <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
             </div>
             {selectedMode === 'SOLO' && (
               <div className="mt-3 flex gap-2">
@@ -108,21 +103,21 @@ function HeroSection({ user }) {
             )}
           </div>
 
+          {/* Lucario centré */}
+          <div className="flex-shrink-0 flex items-end justify-center" style={{ width: 160, height: 180 }}>
+            <img src="/lucario.png" alt="Lucario" style={{ height: 180, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(42,117,187,0.7))' }} />
+          </div>
+
           {/* Team Queue */}
           <div
             role="button" tabIndex={0}
             onClick={() => { setSelectedMode('TEAM'); setSelectedFormat('FIVE_V_FIVE'); }}
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
-            className={`queue-card queue-card-team text-left p-5 ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
-                <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
-                <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
-              </div>
-              <div className="flex gap-1 text-4xl opacity-70 ml-2">
-                <span>🔥</span><span>🐉</span>
-              </div>
+            className={`queue-card queue-card-team text-left p-5 flex-1 ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}>
+            <div>
+              <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
+              <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
+              <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
             </div>
             {selectedMode === 'TEAM' && (
               <div className="mt-3 flex gap-2">
