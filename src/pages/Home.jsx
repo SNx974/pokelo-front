@@ -119,14 +119,25 @@ function HeroSection({ user }) {
             role="button" tabIndex={0}
             onClick={() => { setSelectedMode('TEAM'); setSelectedFormat('FIVE_V_FIVE'); }}
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
-            className={`queue-card queue-card-team text-left p-5 ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}>
-            <div>
+            className={`queue-card queue-card-team text-left p-5 relative ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}
+            style={{ overflow: 'visible' }}>
+            {/* Dracofeu superposé sur le coin droit */}
+            <img
+              src="/Dracofeu.png" alt="Dracofeu"
+              style={{
+                position: 'absolute', bottom: 0, right: 0,
+                height: 260, width: 'auto', objectFit: 'contain',
+                filter: 'drop-shadow(0 0 20px rgba(220,80,20,0.8))',
+                pointerEvents: 'none', zIndex: 10,
+              }}
+            />
+            <div style={{ position: 'relative', zIndex: 3 }}>
               <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
               <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
               <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
             </div>
             {selectedMode === 'TEAM' && (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
                 {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
                   <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
                     className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
