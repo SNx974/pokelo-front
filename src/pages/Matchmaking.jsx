@@ -49,7 +49,7 @@ export default function Matchmaking() {
   useEffect(() => {
     checkStatus();
     fetchQueueInfo();
-    const interval = setInterval(fetchQueueInfo, 10000);
+    const interval = setInterval(fetchQueueInfo, 30000);
 
     // Vérifie si le joueur a un match en cours
     matchmakingApi.activeMatch().then(r => setActiveMatch(r.data.match)).catch(() => {});
@@ -67,7 +67,7 @@ export default function Matchmaking() {
   useEffect(() => {
     if (selectedType === 'TEAM' && currentTeam) {
       refreshTeamOnline();
-      const iv = setInterval(refreshTeamOnline, 10_000);
+      const iv = setInterval(refreshTeamOnline, 30_000);
       return () => clearInterval(iv);
     }
   }, [selectedType, currentTeam?.id, refreshTeamOnline]);

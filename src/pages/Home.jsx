@@ -48,7 +48,7 @@ function HeroSection({ user }) {
   useEffect(() => {
     checkStatus();
     fetchQueueInfo();
-    const iv = setInterval(fetchQueueInfo, 8000);
+    const iv = setInterval(fetchQueueInfo, 30000);
     return () => clearInterval(iv);
   }, []);
 
