@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Ladder from './pages/Ladder';
 import TeamPage from './pages/TeamPage';
+import TeamManage from './pages/TeamManage';
 import Matchmaking from './pages/Matchmaking';
 import MatchPage from './pages/MatchPage';
 import AdminPanel from './pages/AdminPanel';
@@ -32,6 +33,9 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="ladder" element={<Ladder />} />
         <Route path="profile/:id" element={<Profile />} />
+        <Route path="team/manage" element={
+          <ProtectedRoute><TeamManage /></ProtectedRoute>
+        } />
         <Route path="team/:id" element={<TeamPage />} />
         <Route path="match/:id" element={<MatchPage />} />
         <Route path="matchmaking" element={

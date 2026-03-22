@@ -59,16 +59,19 @@ export const usersApi = {
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
 export const teamsApi = {
-  list:             (params)           => api.get('/teams', { params }),
-  get:              (id)               => api.get(`/teams/${id}`),
-  create:           (data)             => api.post('/teams', data),
-  update:           (id, data)         => api.patch(`/teams/${id}`, data),
-  delete:           (id)               => api.delete(`/teams/${id}`),
-  invite:           (id, targetUserId) => api.post(`/teams/${id}/invite`, { targetUserId }),
-  kick:             (id, targetUserId) => api.post(`/teams/${id}/kick`, { targetUserId }),
-  leave:            (id)               => api.post(`/teams/${id}/leave`),
-  acceptInvitation: (invId)            => api.post(`/teams/invitations/${invId}/accept`),
-  declineInvitation:(invId)            => api.post(`/teams/invitations/${invId}/decline`),
+  list:              (params)              => api.get('/teams', { params }),
+  get:               (id)                  => api.get(`/teams/${id}`),
+  my:                ()                    => api.get('/teams/my'),
+  myInvitations:     ()                    => api.get('/teams/invitations/my'),
+  create:            (data)                => api.post('/teams', data),
+  update:            (id, data)            => api.patch(`/teams/${id}`, data),
+  delete:            (id)                  => api.delete(`/teams/${id}`),
+  invite:            (id, data)            => api.post(`/teams/${id}/invite`, data),
+  kick:              (id, targetUserId)    => api.post(`/teams/${id}/kick`, { targetUserId }),
+  leave:             (id)                  => api.post(`/teams/${id}/leave`),
+  cancelInvitation:  (invId)               => api.post(`/teams/invitations/${invId}/cancel`),
+  acceptInvitation:  (invId)               => api.post(`/teams/invitations/${invId}/accept`),
+  declineInvitation: (invId)               => api.post(`/teams/invitations/${invId}/decline`),
 };
 
 // ─── Matches ─────────────────────────────────────────────────────────────────

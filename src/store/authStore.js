@@ -83,6 +83,18 @@ export const useAuthStore = create((set, get) => ({
       case 'MATCH_DISPUTED':
         toast.error('⚠️ Litige créé — scores divergents.', { duration: 6000 });
         break;
+      case 'TEAM_INVITATION':
+        toast('🛡️ Invitation d\'équipe reçue de ' + msg.data?.teamName, { icon: '📬', duration: 6000 });
+        break;
+      case 'TEAM_INVITE_ACCEPTED':
+        toast.success(`✅ ${msg.data?.username} a rejoint votre équipe !`, { duration: 5000 });
+        break;
+      case 'TEAM_KICKED':
+        toast.error(`Vous avez été retiré de ${msg.data?.teamName}`, { duration: 5000 });
+        break;
+      case 'TEAM_DISSOLVED':
+        toast.error(`L'équipe ${msg.data?.teamName} a été dissoute.`, { duration: 5000 });
+        break;
       case 'ACCOUNT_BANNED':
         toast.error(`Compte suspendu: ${msg.reason}`);
         get().logout();
