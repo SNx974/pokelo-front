@@ -7,8 +7,9 @@ import Avatar from '../components/ui/Avatar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
-const MAX_MEMBERS = 8;
 const REGIONS = ['EU', 'NA', 'ASIA', 'OCE', 'SA'];
+const TEAM_SIZES = { TWO_V_TWO: 2, FIVE_V_FIVE: 5 };
+const MODE_LABELS = { TWO_V_TWO: '2v2', FIVE_V_FIVE: '5v5' };
 
 // ─── Sous-composants ──────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function EmptySlot({ onClick }) {
 }
 
 // Slot rempli
-function MemberSlot({ member, isCaptainView, currentUserId, onKick }) {
+function MemberSlot({ member, isCaptainView, currentUserId, onKick, isOnline }) {
   const isCap = member.role === 'CAPTAIN';
   const isMe  = member.userId === currentUserId;
   const wr    = member.user?.wins + member.user?.losses > 0
@@ -54,10 +55,13 @@ function MemberSlot({ member, isCaptainView, currentUserId, onKick }) {
     <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isCap ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-dark-300/50 bg-dark-300/20'}`}>
       <div className="relative shrink-0">
         <Avatar src={member.user?.avatarUrl} username={member.user?.username} size={40} />
-        {isCap && (
+        {isCap ? (
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-xs">
             👑
           </div>
+        ) : (
+          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-dark-200 ${isOnline ? 'bg-green-400' : 'bg-gray-600'}`}
+            title={isOnline ? 'En ligne' : 'Hors ligne'} />
         )}
       </div>
 
@@ -169,7 +173,7 @@ function ReceivedInvitations({ onAccepted }) {
 // ─── Formulaire de création ───────────────────────────────────────────────────
 
 function CreateTeamForm({ onCreated }) {
-  const [form, setForm] = useState({ name: '', tag: '', description: '', region: 'EU' });
+  const [form, setForm] = useState({ name: '', tag: '', description: '', region: 'EU', mode: 'FIVE_V_FIVE' });
   const [loading, setLoading] = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -230,6 +234,19 @@ function CreateTeamForm({ onCreated }) {
           </div>
 
           <div>
+            <label className="text-xs text-gray-400 mb-1.5 block">Mode de jeu</label>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(MODE_LABELS).map(([key, label]) => (
+                <button key={key} type="button" onClick={() => set('mode', key)}
+                  className={`py-3 rounded-xl text-sm font-bold transition-all border ${form.mode === key ? 'border-yellow-500 bg-yellow-500/15 text-yellow-500' : 'border-dark-300 text-gray-400 hover:border-dark-400'}`}>
+                  <div className="text-2xl mb-1">{key === 'TWO_V_TWO' ? '2⚔️2' : '5⚔️5'}</div>
+                  {label} — {TEAM_SIZES[key]} joueurs
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Région</label>
             <div className="flex gap-2 flex-wrap">
               {REGIONS.map(r => (
@@ -258,7 +275,23 @@ function TeamView({ team, role, onRefresh }) {
   const navigate  = useNavigate();
   const isCap     = role === 'CAPTAIN';
   const members   = team.members || [];
-  const emptySlots = Math.max(0, MAX_MEMBERS - members.length);
+  const teamSize  = TEAM_SIZES[team.mode] || 5;
+  const emptySlots = Math.max(0, teamSize - members.length);
+  const [onlineMap, setOnlineMap] = useState({});
+
+  // Récupère le statut online des membres
+  useEffect(() => {
+    teamsApi.onlineStatus(team.id)
+      .then(({ data }) => setOnlineMap(data))
+      .catch(() => {});
+    // Rafraîchit toutes les 15s
+    const interval = setInterval(() => {
+      teamsApi.onlineStatus(team.id)
+        .then(({ data }) => setOnlineMap(data))
+        .catch(() => {});
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [team.id]);
 
   const [inviteModal, setInviteModal]   = useState(false);
   const [editModal, setEditModal]       = useState(false);
@@ -400,7 +433,10 @@ function TeamView({ team, role, onRefresh }) {
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-bold flex items-center gap-2">
             👥 Roster
-            <span className="text-xs text-gray-500 font-normal">{members.length}/{MAX_MEMBERS} membres</span>
+            <span className="text-xs text-gray-500 font-normal">{members.length}/{teamSize} membres</span>
+            <span className="text-xs font-normal px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,203,5,0.1)', color: '#FFCB05' }}>
+              {MODE_LABELS[team.mode] || team.mode}
+            </span>
           </h2>
           {isCap && emptySlots > 0 && (
             <button onClick={() => setInviteModal(true)} className="btn-primary text-sm py-1.5 px-4">
@@ -412,25 +448,19 @@ function TeamView({ team, role, onRefresh }) {
         {/* Barre de progression du roster */}
         <div className="h-1.5 bg-dark-300 rounded-full mb-5 overflow-hidden">
           <div className="h-full bg-yellow-500 rounded-full transition-all"
-            style={{ width: `${(members.length / MAX_MEMBERS) * 100}%` }} />
+            style={{ width: `${(members.length / teamSize) * 100}%` }} />
         </div>
 
         <div className="space-y-2">
           {/* Membres */}
           {members.map(m => (
-            <MemberSlot key={m.id} member={m} isCaptainView={isCap} currentUserId={user?.id} onKick={handleKick} />
+            <MemberSlot key={m.id} member={m} isCaptainView={isCap} currentUserId={user?.id} onKick={handleKick} isOnline={!!onlineMap[m.userId]} />
           ))}
 
           {/* Slots vides — visibles uniquement pour le capitaine */}
-          {isCap && Array.from({ length: Math.min(emptySlots, 3) }).map((_, i) => (
+          {isCap && Array.from({ length: emptySlots }).map((_, i) => (
             <EmptySlot key={`empty-${i}`} onClick={() => setInviteModal(true)} />
           ))}
-
-          {isCap && emptySlots > 3 && (
-            <div className="text-center text-xs text-gray-600 py-1">
-              +{emptySlots - 3} slot{emptySlots - 3 > 1 ? 's' : ''} disponible{emptySlots - 3 > 1 ? 's' : ''}
-            </div>
-          )}
         </div>
       </div>
 

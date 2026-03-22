@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { teamsApi } from '../../services/api';
 import { onWS } from '../../services/websocket';
 import Avatar from '../ui/Avatar';
+import NotificationCenter from '../ui/NotificationCenter';
 
 const navLinks = [
   { to: '/',            label: 'Accueil',   end: true },
@@ -85,6 +86,9 @@ export default function Navbar() {
             <>
               <div className={`w-2 h-2 rounded-full hidden md:block ${wsConnected ? 'bg-green-400' : 'bg-gray-600'}`}
                 title={wsConnected ? 'En ligne' : 'Hors ligne'} />
+
+              {/* Centre de notifications */}
+              <NotificationCenter />
 
               {/* Profile dropdown */}
               <div className="relative">

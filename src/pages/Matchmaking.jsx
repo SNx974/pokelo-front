@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMatchmakingStore } from '../store/matchmakingStore';
 import { useAuthStore } from '../store/authStore';
-import { matchmakingApi } from '../services/api';
+import { matchmakingApi, teamsApi } from '../services/api';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import RankBadge from '../components/ui/RankBadge';
 
@@ -33,6 +33,17 @@ export default function Matchmaking() {
   const [selectedType, setSelectedType] = useState('SOLO');
   const [joining, setJoining] = useState(false);
   const [activeMatch, setActiveMatch] = useState(null);
+  const [myTeam, setMyTeam] = useState(null);
+  const [teamOnline, setTeamOnline] = useState({});
+
+  // Chargement du statut online de l'équipe
+  const refreshTeamOnline = useCallback(() => {
+    if (myTeam?.team?.id) {
+      teamsApi.onlineStatus(myTeam.team.id)
+        .then(({ data }) => setTeamOnline(data))
+        .catch(() => {});
+    }
+  }, [myTeam?.team?.id]);
 
   useEffect(() => {
     checkStatus();
@@ -41,9 +52,20 @@ export default function Matchmaking() {
 
     // Vérifie si le joueur a un match en cours
     matchmakingApi.activeMatch().then(r => setActiveMatch(r.data.match)).catch(() => {});
+    // Charge l'équipe du joueur
+    teamsApi.my().then(r => setMyTeam(r.data)).catch(() => {});
 
     return () => clearInterval(interval);
   }, []);
+
+  // Rafraîchit le statut online quand on passe en Team Queue
+  useEffect(() => {
+    if (selectedType === 'TEAM' && myTeam?.team) {
+      refreshTeamOnline();
+      const iv = setInterval(refreshTeamOnline, 10_000);
+      return () => clearInterval(iv);
+    }
+  }, [selectedType, myTeam?.team?.id, refreshTeamOnline]);
 
   useEffect(() => {
     if (matchFound) {
@@ -192,19 +214,66 @@ export default function Matchmaking() {
         </div>
       </div>
 
+      {/* Team online status (Team Queue only) */}
+      {selectedType === 'TEAM' && myTeam?.team && (
+        <div className="card p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-sm">Statut de l'équipe: <span style={{ color: '#FFCB05' }}>{myTeam.team.name}</span></h3>
+            <button onClick={refreshTeamOnline} className="text-xs text-gray-500 hover:text-gray-300">↻ Rafraîchir</button>
+          </div>
+          <div className="space-y-2">
+            {(myTeam.team.members || []).map(m => {
+              const isOnline = !!teamOnline[m.userId];
+              return (
+                <div key={m.userId} className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-gray-600'}`} />
+                  <span className="text-sm text-gray-300">{m.user?.username}</span>
+                  {m.role === 'CAPTAIN' && <span className="text-xs text-yellow-500">👑</span>}
+                  <span className={`ml-auto text-xs ${isOnline ? 'text-green-400' : 'text-gray-600'}`}>
+                    {isOnline ? 'En ligne' : 'Hors ligne'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {Object.values(teamOnline).some(v => !v) && (
+            <p className="text-xs text-red-400 mt-3">⚠️ Des membres sont hors ligne. Tous doivent être connectés pour lancer la queue.</p>
+          )}
+        </div>
+      )}
+
+      {selectedType === 'TEAM' && !myTeam?.team && (
+        <div className="card p-4 mb-6 border-yellow-500/20">
+          <p className="text-sm text-yellow-500 text-center">⚠️ Vous n'avez pas d'équipe. <Link to="/team/manage" className="underline">Créer ou rejoindre une équipe</Link></p>
+        </div>
+      )}
+
       {/* Join button */}
       <div className="card p-6 text-center">
         <div className="mb-4">
           <span className="text-sm text-gray-400">Format sélectionné: </span>
           <span className="font-bold text-yellow-500">{selectedMode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {selectedType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}</span>
         </div>
-        <button
-          onClick={handleJoin}
-          disabled={joining}
-          className="btn-primary text-lg px-12 py-3"
-        >
-          {joining ? 'Rejoindre...' : '⚔️ Rejoindre la file'}
-        </button>
+        {(() => {
+          // Vérifications pour Team Queue
+          const noTeam = selectedType === 'TEAM' && !myTeam?.team;
+          const hasOffline = selectedType === 'TEAM' && myTeam?.team && Object.values(teamOnline).some(v => !v);
+          const teamSize = selectedMode === 'TWO_V_TWO' ? 2 : 5;
+          const notEnoughMembers = selectedType === 'TEAM' && myTeam?.team && (myTeam.team.members?.length || 0) < teamSize;
+          const disabled = joining || noTeam || hasOffline || notEnoughMembers;
+          const reason = noTeam ? 'Vous n\'avez pas d\'équipe'
+            : notEnoughMembers ? `Il faut ${teamSize} membres (${myTeam.team.members?.length}/${teamSize})`
+            : hasOffline ? 'Des membres sont hors ligne'
+            : null;
+          return (
+            <>
+              <button onClick={handleJoin} disabled={disabled} className="btn-primary text-lg px-12 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                {joining ? 'Rejoindre...' : '⚔️ Rejoindre la file'}
+              </button>
+              {reason && <p className="text-xs text-red-400 mt-2">{reason}</p>}
+            </>
+          );
+        })()}
         <p className="text-xs text-gray-500 mt-3">Le matching se base sur votre Elo. La tolérance augmente avec le temps d'attente.</p>
       </div>
     </div>
