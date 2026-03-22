@@ -80,8 +80,16 @@ export default function Profile() {
             <div className="flex flex-wrap gap-3 text-sm text-gray-400">
               {profile.region && <span>🌍 {profile.region}</span>}
               {profile.preferredRole && <span>🎮 {profile.preferredRole}</span>}
+              {profile.favoritePokemon && (
+                <span className="flex items-center gap-1">
+                  ⭐ {profile.favoritePokemon}
+                </span>
+              )}
               <span>📅 Depuis {format(new Date(profile.createdAt), 'MMM yyyy', { locale: fr })}</span>
             </div>
+            {profile.bio && (
+              <p className="mt-2 text-sm text-gray-300 max-w-lg">{profile.bio}</p>
+            )}
           </div>
           {isOwn && (
             <Link to={`/profile/${id}/edit`} className="btn-ghost text-sm">✏️ Modifier le profil</Link>

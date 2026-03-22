@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import ProfileEdit from './pages/ProfileEdit';
 import Ladder from './pages/Ladder';
 import TeamPage from './pages/TeamPage';
 import TeamManage from './pages/TeamManage';
@@ -33,6 +34,9 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="ladder" element={<Ladder />} />
         <Route path="profile/:id" element={<Profile />} />
+        <Route path="profile/:id/edit" element={
+          <ProtectedRoute><ProfileEdit /></ProtectedRoute>
+        } />
         <Route path="team/manage" element={
           <ProtectedRoute><TeamManage /></ProtectedRoute>
         } />
