@@ -46,18 +46,18 @@ function HeroSection({ user }) {
 
   return (
     <section className="relative overflow-hidden" style={{
-      background: 'linear-gradient(180deg, #0a1e40 0%, #05122e 40%, #050d1a 100%)',
+      backgroundImage: 'url(/bg.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center top',
       minHeight: 420,
     }}>
-      {/* Stadium atmosphere */}
+      {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Top glow */}
-        <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '300px', background: 'radial-gradient(ellipse, rgba(42,117,187,0.25) 0%, transparent 70%)' }} />
+        {/* Assombrissement général pour la lisibilité */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,13,26,0.55) 0%, rgba(5,13,26,0.45) 60%, rgba(5,13,26,0.75) 100%)' }} />
         {/* Side lights */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.12) 0%, transparent 70%)' }} />
-        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.10) 0%, transparent 70%)' }} />
-        {/* Grid lines decoration */}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,203,5,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,203,5,0.03) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.08) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.07) 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-10">
