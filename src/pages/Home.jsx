@@ -91,7 +91,7 @@ function HeroSection({ user }) {
               src="/lucario.png" alt="Lucario"
               style={{
                 position: 'absolute', bottom: 0, right: -10,
-                height: 170, width: 'auto', objectFit: 'contain',
+                height: 220, width: 'auto', objectFit: 'contain',
                 filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))',
                 pointerEvents: 'none', zIndex: 2,
               }}
