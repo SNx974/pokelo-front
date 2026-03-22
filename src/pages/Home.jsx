@@ -87,9 +87,10 @@ function HeroSection({ user }) {
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
             className={`queue-card queue-card-solo text-left p-5 relative ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}
             style={{ overflow: 'visible' }}>
-            {/* Lucario superposé sur le coin droit */}
+            {/* Lucario superposé sur le coin droit — caché sur mobile */}
             <img
               src="/lucario.png" alt="Lucario"
+              className="hidden md:block"
               style={{
                 position: 'absolute', bottom: 0, right: 0,
                 height: 260, width: 'auto', objectFit: 'contain',
@@ -121,9 +122,10 @@ function HeroSection({ user }) {
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
             className={`queue-card queue-card-team text-left p-5 relative ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}
             style={{ overflow: 'visible' }}>
-            {/* Dracofeu superposé sur le coin droit */}
+            {/* Dracofeu superposé sur le coin droit — caché sur mobile */}
             <img
               src="/Dracofeu.png" alt="Dracofeu"
+              className="hidden md:block"
               style={{
                 position: 'absolute', bottom: 0, right: 0,
                 height: 260, width: 'auto', objectFit: 'contain',
