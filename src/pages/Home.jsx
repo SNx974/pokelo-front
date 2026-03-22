@@ -99,8 +99,18 @@ function HeroSection({ user }) {
             maxWidth: 480,
             width: '100%',
           }}>
-            {/* Spinner */}
-            <div className="w-20 h-20 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin mx-auto mb-6" />
+            {/* Spinner avec avatar */}
+            <div className="relative mx-auto mb-6" style={{ width: 88, height: 88 }}>
+              {/* Anneau tournant */}
+              <div className="absolute inset-0 rounded-full animate-spin"
+                style={{ border: '3px solid rgba(255,203,5,0.15)', borderTopColor: '#FFCB05', borderRightColor: 'rgba(255,203,5,0.5)' }} />
+              {/* Avatar centré */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="rounded-full overflow-hidden" style={{ width: 68, height: 68, border: '2px solid rgba(255,203,5,0.3)' }}>
+                  <Avatar src={user?.avatarUrl} username={user?.username} size={68} />
+                </div>
+              </div>
+            </div>
 
             <h2 className="font-bebas text-4xl tracking-wider mb-1" style={{ color: '#FFCB05' }}>
               Recherche d'adversaires...
