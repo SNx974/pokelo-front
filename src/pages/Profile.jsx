@@ -61,15 +61,13 @@ export default function Profile() {
   if (!profile) return <div className="text-center py-32 text-gray-400">Joueur introuvable</div>;
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background */}
-      <div className="fixed inset-0 -z-10" style={{
-        backgroundImage: 'url(/bg-profile.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        opacity: 0.18,
-      }} />
+    <div style={{
+      backgroundImage: 'url(/bg-profile.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center top',
+      backgroundAttachment: 'fixed',
+    }}>
+      <div style={{ background: 'rgba(5,13,26,0.82)', minHeight: '100vh' }}>
     <div className="max-w-5xl mx-auto px-4 py-10 animate-fade-in">
       {/* Header */}
       <div className="card p-6 mb-6" style={{ background: 'linear-gradient(135deg, rgba(42,117,187,0.1), rgba(255,203,5,0.05))' }}>
@@ -176,6 +174,7 @@ export default function Profile() {
         </div>
       </div>
     </div>
+      </div>
     </div>
   );
 }

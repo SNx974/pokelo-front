@@ -131,14 +131,13 @@ export default function ProfileEdit() {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <div className="fixed inset-0 -z-10" style={{
-        backgroundImage: 'url(/bg-profile.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        opacity: 0.18,
-      }} />
+    <div style={{
+      backgroundImage: 'url(/bg-profile.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center top',
+      backgroundAttachment: 'fixed',
+    }}>
+      <div style={{ background: 'rgba(5,13,26,0.82)', minHeight: '100vh' }}>
     <div className="max-w-2xl mx-auto px-4 py-10 animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
         <Link to={`/profile/${id}`} className="text-gray-400 hover:text-white transition-colors text-sm">← Retour</Link>
@@ -274,6 +273,7 @@ export default function ProfileEdit() {
         </div>
       </form>
     </div>
+      </div>
     </div>
   );
 }
