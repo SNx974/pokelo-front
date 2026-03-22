@@ -35,13 +35,17 @@ function HeroSection({ user }) {
   const [selectedMode, setSelectedMode] = useState('SOLO');
   const [selectedFormat, setSelectedFormat] = useState('TWO_V_TWO');
   const [joining, setJoining] = useState(false);
+  const [zooming, setZooming] = useState(false);
 
   const handleSearch = async () => {
     if (!user) { navigate('/login'); return; }
-    setJoining(true);
-    const res = await joinQueue(selectedFormat, selectedMode);
-    setJoining(false);
-    if (res?.success) navigate('/matchmaking');
+    setZooming(true);
+    setTimeout(async () => {
+      setJoining(true);
+      const res = await joinQueue(selectedFormat, selectedMode);
+      setJoining(false);
+      navigate('/matchmaking');
+    }, 500);
   };
 
   return (
@@ -157,7 +161,7 @@ function HeroSection({ user }) {
         <div className="flex justify-center">
           <button
             onClick={handleSearch}
-            disabled={joining}
+            disabled={joining || zooming}
             className="btn-primary px-16 py-4 rounded-xl text-lg font-bebas tracking-widest uppercase"
             style={{ fontSize: '1.1rem', letterSpacing: '0.15em', minWidth: 320 }}
           >
@@ -165,6 +169,21 @@ function HeroSection({ user }) {
           </button>
         </div>
       </div>
+
+      {/* Zoom transition overlay */}
+      {zooming && (
+        <div
+          className="zoom-transition-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: '#050d1a',
+            transformOrigin: 'center center',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
     </section>
   );
 }
