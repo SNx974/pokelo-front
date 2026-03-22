@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
-import { adminApi, matchesApi } from '../services/api';
+import { adminApi, matchesApi, usersApi } from '../services/api';
 import Avatar from '../components/ui/Avatar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -682,11 +682,204 @@ function News() {
   );
 }
 
+// ─── Gestion équipes ──────────────────────────────────────────────────────────
+
+function Teams() {
+  const [teams, setTeams] = useState([]);
+  const [q, setQ] = useState('');
+  const [modeFilter, setModeFilter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
+  const [addModal, setAddModal] = useState(null); // teamId
+  const [searchQ, setSearchQ] = useState('');
+  const [searchRes, setSearchRes] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const searchRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  const load = (search = q, mode = modeFilter) => {
+    setLoading(true);
+    adminApi.listTeams({ q: search, mode: mode || undefined })
+      .then(r => setTeams(r.data.teams || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (searchQ.length < 2) { setSearchRes([]); return; }
+    clearTimeout(debounceRef.current);
+    setSearching(true);
+    debounceRef.current = setTimeout(() => {
+      usersApi.search({ q: searchQ })
+        .then(r => setSearchRes(r.data || []))
+        .catch(() => setSearchRes([]))
+        .finally(() => setSearching(false));
+    }, 300);
+  }, [searchQ]);
+
+  const doDelete = async (id, name) => {
+    if (!confirm(`Supprimer l'équipe "${name}" ? Cette action est irréversible.`)) return;
+    try {
+      await adminApi.deleteTeam(id);
+      toast.success('Équipe supprimée');
+      load();
+    } catch {}
+  };
+
+  const doRemoveMember = async (teamId, userId, username) => {
+    if (!confirm(`Retirer ${username} de l'équipe ?`)) return;
+    try {
+      await adminApi.removeTeamMember(teamId, userId);
+      toast.success(`${username} retiré`);
+      load();
+    } catch {}
+  };
+
+  const doAddMember = async (userId, username) => {
+    try {
+      await adminApi.addTeamMember(addModal, { userId, role: 'MEMBER' });
+      toast.success(`${username} ajouté`);
+      setAddModal(null); setSearchQ(''); setSearchRes([]);
+      load();
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Erreur');
+    }
+  };
+
+  const MODE_LABELS = { TWO_V_TWO: '2v2', FIVE_V_FIVE: '5v5' };
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-2xl mb-5">Gestion des équipes</h2>
+
+      <div className="flex gap-3 mb-5 flex-wrap">
+        <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && load(q)}
+          className="input flex-1" placeholder="Rechercher une équipe..." />
+        <div className="flex gap-2">
+          {[{ v: '', l: 'Tous' }, { v: 'TWO_V_TWO', l: '2v2' }, { v: 'FIVE_V_FIVE', l: '5v5' }].map(({ v, l }) => (
+            <button key={v} onClick={() => { setModeFilter(v); load(q, v); }}
+              className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${modeFilter === v ? 'bg-yellow-500/20 text-yellow-500' : 'bg-dark-300 text-gray-400 hover:text-white'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => load(q)} className="btn-secondary px-5">Chercher</button>
+      </div>
+
+      {loading ? <LoadingSpinner /> : teams.length === 0 ? (
+        <div className="card p-10 text-center text-gray-500">Aucune équipe trouvée</div>
+      ) : (
+        <div className="space-y-3">
+          {teams.map(team => {
+            const isOpen = expanded === team.id;
+            const captain = team.members.find(m => m.role === 'CAPTAIN');
+            return (
+              <div key={team.id} className="card overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center gap-4 p-4">
+                  <button onClick={() => setExpanded(isOpen ? null : team.id)} className="flex-1 flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                      style={{ background: team.mode === 'TWO_V_TWO' ? 'rgba(59,130,246,0.15)' : 'rgba(168,85,247,0.15)', color: team.mode === 'TWO_V_TWO' ? '#60a5fa' : '#c084fc' }}>
+                      {MODE_LABELS[team.mode]}
+                    </div>
+                    <div>
+                      <div className="font-bold">{team.name} <span className="text-xs text-gray-500 font-normal">[{team.tag}]</span></div>
+                      <div className="text-xs text-gray-500">
+                        Cap: {captain?.user?.username || '—'} · {team.members.length} membre{team.members.length > 1 ? 's' : ''} · {team.eloTeam} Elo
+                      </div>
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge color={team.mode === 'TWO_V_TWO' ? 'blue' : 'purple'}>{MODE_LABELS[team.mode]}</Badge>
+                    <button onClick={() => { setAddModal(team.id); setSearchQ(''); setSearchRes([]); }}
+                      className="text-xs text-green-400 hover:text-green-300 transition-colors">+ Ajouter</button>
+                    <button onClick={() => doDelete(team.id, team.name)}
+                      className="text-xs text-red-400 hover:text-red-300 transition-colors">Supprimer</button>
+                  </div>
+                </div>
+
+                {/* Membres (expandable) */}
+                {isOpen && (
+                  <div className="border-t border-dark-300/40 px-4 pb-4 pt-3">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Membres</div>
+                    <div className="space-y-2">
+                      {team.members.map(m => (
+                        <div key={m.id} className="flex items-center gap-3 p-2.5 bg-dark-300/30 rounded-lg">
+                          <Avatar username={m.user?.username} size={28} />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium">{m.user?.username}</span>
+                            <span className="ml-2 text-xs text-gray-500">{m.user?.eloGlobal} Elo</span>
+                          </div>
+                          <Badge color={m.role === 'CAPTAIN' ? 'yellow' : 'gray'}>{m.role === 'CAPTAIN' ? 'Capitaine' : 'Membre'}</Badge>
+                          {m.role !== 'CAPTAIN' && (
+                            <button onClick={() => doRemoveMember(team.id, m.userId, m.user?.username)}
+                              className="text-xs text-red-400 hover:text-red-300 transition-colors ml-1">Retirer</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal Ajouter un membre */}
+      {addModal && (
+        <Modal title="Ajouter un membre" onClose={() => { setAddModal(null); setSearchQ(''); setSearchRes([]); }}>
+          <div className="space-y-4">
+            <div className="relative">
+              <input
+                ref={searchRef}
+                autoFocus
+                value={searchQ}
+                onChange={e => setSearchQ(e.target.value)}
+                className="input w-full pr-10"
+                placeholder="Rechercher un joueur..."
+              />
+              {searching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {searchRes.map(u => (
+                <div key={u.id} className="flex items-center gap-3 p-3 bg-dark-300/40 rounded-xl">
+                  <Avatar username={u.username} size={32} />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{u.username}</div>
+                    <div className="text-xs text-gray-500">{u.eloGlobal} Elo</div>
+                  </div>
+                  <button onClick={() => doAddMember(u.id, u.username)} className="btn-primary text-xs py-1.5 px-3">
+                    Ajouter
+                  </button>
+                </div>
+              ))}
+              {searchQ.length >= 2 && !searching && searchRes.length === 0 && (
+                <div className="text-center text-gray-500 text-sm py-4">Aucun joueur trouvé</div>
+              )}
+              {searchQ.length < 2 && (
+                <div className="text-center text-gray-600 text-sm py-4">Tapez au moins 2 caractères</div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 const adminNav = [
   { to: '/admin',           label: 'Dashboard',     icon: '📊', end: true },
   { to: '/admin/users',     label: 'Joueurs',       icon: '👥' },
+  { to: '/admin/teams',     label: 'Équipes',       icon: '🛡️' },
   { to: '/admin/disputes',  label: 'Litiges',       icon: '⚠️' },
   { to: '/admin/reports',   label: 'Signalements',  icon: '🚩' },
   { to: '/admin/news',      label: 'Actualités',    icon: '📰' },
@@ -725,6 +918,7 @@ export default function AdminPanel() {
           <Routes>
             <Route index        element={<Dashboard />} />
             <Route path="users"    element={<Users />} />
+            <Route path="teams"    element={<Teams />} />
             <Route path="disputes" element={<Disputes />} />
             <Route path="reports"  element={<Reports />} />
             <Route path="news"     element={<News />} />

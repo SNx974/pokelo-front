@@ -136,7 +136,11 @@ export const adminApi = {
   listAllNews:    ()              => api.get('/admin/news'),
   createNews:     (data)          => api.post('/admin/news', data),
   updateNews:     (id, data)      => api.patch(`/admin/news/${id}`, data),
-  deleteNews:     (id)            => api.delete(`/admin/news/${id}`),
+  deleteNews:          (id)            => api.delete(`/admin/news/${id}`),
+  listTeams:           (params)        => api.get('/admin/teams', { params }),
+  deleteTeam:          (id)            => api.delete(`/admin/teams/${id}`),
+  addTeamMember:       (id, data)      => api.post(`/admin/teams/${id}/members`, data),
+  removeTeamMember:    (id, userId)    => api.delete(`/admin/teams/${id}/members/${userId}`),
 };
 
 export default api;
