@@ -439,8 +439,25 @@ export default function Home() {
       <HeroSection user={user} />
 
       {/* Dashboard grid */}
-      <div style={{ backgroundImage: 'url(/bg2.png)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,13,26,0.82)' }} />
+      <div style={{ backgroundImage: 'url(/bg2.png)', backgroundSize: 'cover', backgroundPosition: 'center top', position: 'relative', marginTop: '-2px' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,13,26,0.80)' }} />
+        {/* Pikachu — gauche, à cheval sur la transition hero/cards */}
+        <img
+          src="/pika.png"
+          alt="Pikachu"
+          className="hidden md:block"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: -80,
+            height: 240,
+            width: 'auto',
+            objectFit: 'contain',
+            filter: 'drop-shadow(0 0 24px rgba(255,203,5,0.5))',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        />
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* Row 1 — 3 columns */}
