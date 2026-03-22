@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 export default function Layout() {
   const { user } = useAuthStore();
   return (
-    <div style={{ minHeight: '100vh', background: '#050d1a' }}>
+    <div style={{ minHeight: '100vh' }}>
       <Navbar />
       <main className="pt-14" style={{ minHeight: 'calc(100vh - 56px)' }}>
         <Outlet />
