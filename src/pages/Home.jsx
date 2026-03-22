@@ -84,51 +84,69 @@ function HeroSection({ user }) {
 
       {/* ── EN QUEUE ── */}
       {inQueue ? (
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-16 animate-fade-in">
-          {/* Spinner */}
-          <div className="w-24 h-24 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mb-8" />
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-16"
+          style={{ animation: 'queueFadeIn 0.5s cubic-bezier(0.4,0,0.2,1) forwards' }}>
 
-          <h2 className="font-bebas text-4xl tracking-wider mb-1" style={{ color: '#FFCB05' }}>
-            Recherche d'adversaires...
-          </h2>
-          <p className="text-gray-400 mb-6 text-sm font-semibold">
-            {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {queueEntry?.queueType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}
-          </p>
+          {/* Encadré glassmorphism */}
+          <div style={{
+            background: 'rgba(5,13,26,0.72)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,203,5,0.2)',
+            borderRadius: '1.5rem',
+            padding: '2.5rem 3rem',
+            boxShadow: '0 0 60px rgba(255,203,5,0.08), 0 8px 32px rgba(0,0,0,0.5)',
+            minWidth: 340,
+            maxWidth: 480,
+            width: '100%',
+          }}>
+            {/* Spinner */}
+            <div className="w-20 h-20 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin mx-auto mb-6" />
 
-          {/* Timer */}
-          <QueueTimer seconds={waitTime} />
-          <p className="text-gray-500 text-xs mt-2 mb-8">Temps d'attente</p>
+            <h2 className="font-bebas text-4xl tracking-wider mb-1" style={{ color: '#FFCB05' }}>
+              Recherche d'adversaires...
+            </h2>
+            <p className="text-gray-400 mb-5 text-sm font-semibold">
+              {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {queueEntry?.queueType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}
+            </p>
 
-          {/* Stats */}
-          <div className="flex gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold font-mono" style={{ color: '#FFCB05' }}>{playersInQueue}</div>
-              <div className="text-xs text-gray-500 mt-0.5">Joueurs en file</div>
-            </div>
-            <div className="w-px bg-white/10" />
-            <div className="text-center">
-              <div className="text-2xl font-bold font-mono text-blue-400">
-                {queueEntry?.mode === 'TWO_V_TWO' ? user?.elo2v2 : user?.elo5v5}
+            {/* Timer */}
+            <QueueTimer seconds={waitTime} />
+            <p className="text-gray-500 text-xs mt-1 mb-6">Temps d'attente</p>
+
+            {/* Séparateur */}
+            <div style={{ height: 1, background: 'rgba(255,203,5,0.12)', margin: '0 0 1.5rem' }} />
+
+            {/* Stats */}
+            <div className="flex justify-center gap-8 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold font-mono" style={{ color: '#FFCB05' }}>{playersInQueue}</div>
+                <div className="text-xs text-gray-500 mt-0.5">En file</div>
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">Votre Elo</div>
-            </div>
-            <div className="w-px bg-white/10" />
-            <div className="text-center">
-              <div className="text-2xl font-bold font-mono text-green-400">
-                {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}
+              <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="text-center">
+                <div className="text-2xl font-bold font-mono text-blue-400">
+                  {queueEntry?.mode === 'TWO_V_TWO' ? user?.elo2v2 : user?.elo5v5}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">Votre Elo</div>
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">Format</div>
+              <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="text-center">
+                <div className="text-2xl font-bold font-mono text-green-400">
+                  {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">Format</div>
+              </div>
             </div>
+
+            {/* Leave button */}
+            <button
+              onClick={leaveQueue}
+              className="w-full py-3 rounded-xl font-bebas text-lg tracking-widest uppercase transition-all hover:scale-105"
+              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}
+            >
+              ✕ Quitter la file
+            </button>
           </div>
-
-          {/* Leave button */}
-          <button
-            onClick={leaveQueue}
-            className="px-12 py-3 rounded-xl font-bebas text-lg tracking-widest uppercase transition-all hover:scale-105"
-            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171' }}
-          >
-            ✕ Quitter la file
-          </button>
         </div>
 
       ) : (
