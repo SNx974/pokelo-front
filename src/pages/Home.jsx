@@ -85,15 +85,16 @@ function HeroSection({ user }) {
             role="button" tabIndex={0}
             onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
             onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
-            className={`queue-card queue-card-solo text-left p-5 relative overflow-visible ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
+            className={`queue-card queue-card-solo text-left p-5 relative ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}
+            style={{ overflow: 'visible' }}>
             {/* Lucario superposé sur le coin droit */}
             <img
               src="/lucario.png" alt="Lucario"
               style={{
-                position: 'absolute', bottom: 0, right: -10,
-                height: 220, width: 'auto', objectFit: 'contain',
+                position: 'absolute', bottom: -8, right: -5,
+                height: 260, width: 'auto', objectFit: 'contain',
                 filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))',
-                pointerEvents: 'none', zIndex: 2,
+                pointerEvents: 'none', zIndex: 10,
               }}
             />
             <div style={{ position: 'relative', zIndex: 3 }}>
