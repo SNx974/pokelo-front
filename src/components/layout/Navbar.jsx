@@ -5,21 +5,25 @@ import { teamsApi } from '../../services/api';
 import { onWS } from '../../services/websocket';
 import Avatar from '../ui/Avatar';
 import NotificationCenter from '../ui/NotificationCenter';
+import {
+  Home, Trophy, Swords, User, Shield, ShieldAlert,
+  LogOut, ChevronDown, Settings, Wifi, WifiOff,
+} from 'lucide-react';
+import { SiPokemon } from '@icons-pack/react-simple-icons';
 
 const navLinks = [
-  { to: '/',            label: 'Accueil',   end: true },
-  { to: '/ladder',      label: 'Ladder',    end: false },
-  { to: '/matchmaking', label: 'Jouer',     end: false },
+  { to: '/',            label: 'Accueil',   end: true,  Icon: Home },
+  { to: '/ladder',      label: 'Ladder',    end: false, Icon: Trophy },
+  { to: '/matchmaking', label: 'Jouer',     end: false, Icon: Swords },
 ];
 
 export default function Navbar() {
   const { user, logout, wsConnected } = useAuthStore();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen]     = useState(false);
+  const [menuOpen, setMenuOpen]       = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [pendingInvites, setPendingInvites] = useState(0);
 
-  // Charge le nombre d'invitations en attente
   const fetchInvites = async () => {
     if (!user) return;
     try {
@@ -31,11 +35,8 @@ export default function Navbar() {
   useEffect(() => {
     if (!user) { setPendingInvites(0); return; }
     fetchInvites();
-
-    // Mise à jour en temps réel via WS
     const offInvite   = onWS('TEAM_INVITATION',     () => fetchInvites());
     const offAccepted = onWS('TEAM_INVITE_ACCEPTED', () => fetchInvites());
-
     return () => { offInvite(); offAccepted(); };
   }, [user]);
 
@@ -48,16 +49,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 mr-8 shrink-0">
-          <div className="relative w-8 h-8">
-            <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden relative"
-              style={{ background: 'linear-gradient(180deg, #e74c3c 50%, #fff 50%)' }}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-0.5 bg-gray-900" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)' }} />
-                <div className="w-3 h-3 rounded-full bg-white border-2 border-gray-800 z-10" />
-              </div>
-            </div>
-          </div>
+        <Link to="/" className="flex items-center gap-2 mr-8 shrink-0">
+          <SiPokemon size={22} style={{ color: '#FFCB05' }} />
           <span className="font-bebas text-2xl tracking-wider" style={{ letterSpacing: '0.05em' }}>
             <span style={{ color: '#FFCB05' }}>Poké</span><span style={{ color: '#fff' }}>lo</span>
           </span>
@@ -65,14 +58,15 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-1 flex-1">
-          {navLinks.map(link => (
-            <NavLink key={link.to} to={link.to} end={link.end}
+          {navLinks.map(({ to, label, end, Icon }) => (
+            <NavLink key={to} to={to} end={end}
               className={({ isActive }) =>
-                `px-4 py-1.5 text-sm font-semibold transition-all relative ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`
+                `flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold transition-all relative ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`
               }>
               {({ isActive }) => (
                 <>
-                  {link.label}
+                  <Icon size={14} />
+                  {label}
                   {isActive && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#FFCB05' }} />}
                 </>
               )}
@@ -81,13 +75,16 @@ export default function Navbar() {
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {user ? (
             <>
-              <div className={`w-2 h-2 rounded-full hidden md:block ${wsConnected ? 'bg-green-400' : 'bg-gray-600'}`}
-                title={wsConnected ? 'En ligne' : 'Hors ligne'} />
+              {/* WS status */}
+              {wsConnected
+                ? <Wifi size={14} className="hidden md:block text-green-400" title="En ligne" />
+                : <WifiOff size={14} className="hidden md:block text-gray-600" title="Hors ligne" />
+              }
 
-              {/* Centre de notifications */}
+              {/* Notification center */}
               <NotificationCenter />
 
               {/* Profile dropdown */}
@@ -95,15 +92,15 @@ export default function Navbar() {
                 <button onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/5">
                   <div className="relative">
-                    <Avatar src={user.avatarUrl} username={user.username} size={30} />
+                    <Avatar src={user.avatarUrl} username={user.username} size={28} />
                     {pendingInvites > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold leading-none">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none">
                         {pendingInvites > 9 ? '9+' : pendingInvites}
                       </span>
                     )}
                   </div>
                   <span className="text-sm font-semibold hidden md:block">{user.username}</span>
-                  <span className="hidden md:block text-gray-600 text-xs">▾</span>
+                  <ChevronDown size={12} className="hidden md:block text-gray-500" />
                 </button>
 
                 {profileOpen && (
@@ -112,42 +109,43 @@ export default function Navbar() {
                     <div className="absolute right-0 top-full mt-2 w-56 z-20 rounded-xl overflow-hidden animate-slide-up"
                       style={{ background: '#0d1f3c', border: '1px solid rgba(255,203,5,0.25)' }}>
 
-                      {/* Header */}
                       <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,203,5,0.15)' }}>
                         <div className="font-bold text-sm">{user.username}</div>
-                        <div className="text-xs text-yellow-500 mt-0.5">⚡ {user.eloGlobal} Elo</div>
+                        <div className="text-xs text-yellow-500 mt-0.5 flex items-center gap-1">
+                          <Trophy size={11} /> {user.eloGlobal} Elo
+                        </div>
                       </div>
 
                       <div className="py-1">
                         <Link to={`/profile/${user.id}`}
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                           onClick={() => setProfileOpen(false)}>
-                          👤 Mon profil
+                          <User size={14} /> Mon profil
                         </Link>
 
-                        {/* Mon équipe avec badge */}
                         <Link to="/team/manage"
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                           onClick={() => setProfileOpen(false)}>
-                          <span>🛡️ Mon équipe</span>
+                          <Shield size={14} />
+                          <span>Mon équipe</span>
                           {pendingInvites > 0 && (
-                            <span className="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                               {pendingInvites}
                             </span>
                           )}
                         </Link>
 
                         <Link to="/matchmaking"
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                           onClick={() => setProfileOpen(false)}>
-                          ⚔️ Jouer
+                          <Swords size={14} /> Jouer
                         </Link>
 
                         {['ADMIN', 'MODERATOR'].includes(user.role) && (
                           <Link to="/admin"
-                            className="flex items-center gap-2 px-4 py-2.5 text-sm text-yellow-500 hover:bg-yellow-500/10 transition-colors"
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-yellow-500 hover:bg-yellow-500/10 transition-colors"
                             onClick={() => setProfileOpen(false)}>
-                            🛡️ Panel Admin
+                            <ShieldAlert size={14} /> Panel Admin
                           </Link>
                         )}
 
@@ -155,8 +153,8 @@ export default function Navbar() {
 
                         <button
                           onClick={() => { logout(); setProfileOpen(false); navigate('/'); }}
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors w-full text-left">
-                          🚪 Déconnexion
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors w-full text-left">
+                          <LogOut size={14} /> Déconnexion
                         </button>
                       </div>
                     </div>
@@ -176,8 +174,11 @@ export default function Navbar() {
           )}
 
           {/* Mobile burger */}
-          <button className="md:hidden text-gray-400 hover:text-white text-xl" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? '✕' : '☰'}
+          <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen
+              ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/></svg>
+            }
           </button>
         </div>
       </div>
@@ -185,25 +186,29 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden py-3 px-4 animate-slide-up" style={{ borderTop: '1px solid rgba(255,203,5,0.15)', background: '#0d1f3c' }}>
-          {navLinks.map(link => (
-            <NavLink key={link.to} to={link.to} end={link.end}
+          {navLinks.map(({ to, label, end, Icon }) => (
+            <NavLink key={to} to={to} end={end}
               className={({ isActive }) =>
-                `block px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold ${isActive ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-300'}`
+                `flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold ${isActive ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-300'}`
               }
               onClick={() => setMenuOpen(false)}>
-              {link.label}
+              <Icon size={15} /> {label}
             </NavLink>
           ))}
           {user && (
             <>
               <Link to="/team/manage" className="flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold text-gray-300"
                 onClick={() => setMenuOpen(false)}>
-                <span>🛡️ Mon équipe</span>
-                {pendingInvites > 0 && <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{pendingInvites}</span>}
+                <span className="flex items-center gap-2"><Shield size={15} /> Mon équipe</span>
+                {pendingInvites > 0 && <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pendingInvites}</span>}
               </Link>
-              <Link to={`/profile/${user.id}`} className="block px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold text-gray-300" onClick={() => setMenuOpen(false)}>
-                👤 Mon profil
+              <Link to={`/profile/${user.id}`} className="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold text-gray-300" onClick={() => setMenuOpen(false)}>
+                <User size={15} /> Mon profil
               </Link>
+              <button onClick={() => { logout(); setMenuOpen(false); navigate('/'); }}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1 text-sm font-semibold text-red-400 w-full text-left">
+                <LogOut size={15} /> Déconnexion
+              </button>
             </>
           )}
         </div>

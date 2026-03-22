@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { matchmakingApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { onWS } from '../../services/websocket';
+import { Swords } from 'lucide-react';
 
 /**
  * Bannière persistante affichée sur toutes les pages quand un match est en cours.
@@ -72,7 +73,7 @@ export default function ActiveMatchBanner() {
           <div className="text-xs text-gray-400">{modeLabel} · Cliquez pour rejoindre</div>
         </div>
 
-        <div className="text-yellow-500 text-lg">⚔️</div>
+        <Swords size={18} className="text-yellow-500" />
       </div>
     </div>
   );

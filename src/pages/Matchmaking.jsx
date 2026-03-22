@@ -5,14 +5,15 @@ import { useAuthStore } from '../store/authStore';
 import { matchmakingApi, teamsApi } from '../services/api';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import RankBadge from '../components/ui/RankBadge';
+import { User, Users, Swords, Gamepad2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 const MODES = [
-  { id: 'TWO_V_TWO', label: '2v2', icon: '⚔️', desc: 'Équipe de 2 joueurs. Parties rapides et intenses.', players: '2v2' },
-  { id: 'FIVE_V_FIVE', label: '5v5', icon: '🎮', desc: 'Équipe de 5 joueurs. Le format compétitif principal.', players: '5v5' },
+  { id: 'TWO_V_TWO',   label: '2v2', Icon: Swords,   desc: 'Équipe de 2 joueurs. Parties rapides et intenses.' },
+  { id: 'FIVE_V_FIVE', label: '5v5', Icon: Gamepad2,  desc: 'Équipe de 5 joueurs. Le format compétitif principal.' },
 ];
 const QUEUE_TYPES = [
-  { id: 'SOLO', label: 'Solo Queue', icon: '👤', desc: 'Jouez seul, soyez groupé avec d\'autres joueurs.' },
-  { id: 'TEAM', label: 'Team Queue', icon: '🛡️', desc: 'Jouez avec votre équipe. Nécessite une équipe.' },
+  { id: 'SOLO', label: 'Solo Queue', Icon: User,  desc: 'Jouez seul, soyez groupé avec d\'autres joueurs.' },
+  { id: 'TEAM', label: 'Team Queue', Icon: Users, desc: 'Jouez avec votre équipe. Nécessite une équipe.' },
 ];
 
 function QueueTimer({ seconds }) {
@@ -191,14 +192,14 @@ export default function Matchmaking() {
       <div className="mb-6">
         <h2 className="font-bold mb-3 text-gray-300">1. Choisir le format</h2>
         <div className="grid md:grid-cols-2 gap-4">
-          {MODES.map(m => (
-            <button key={m.id} onClick={() => setSelectedMode(m.id)}
-              className={`card p-5 text-left transition-all border-2 ${selectedMode === m.id ? 'border-yellow-500 bg-yellow-500/5 shadow-glow-yellow' : 'border-dark-300 hover:border-dark-400'}`}>
-              <div className="text-3xl mb-2">{m.icon}</div>
-              <div className="font-bold text-lg">{m.label}</div>
-              <div className="text-sm text-gray-400 mt-1">{m.desc}</div>
+          {MODES.map(({ id, label, Icon, desc }) => (
+            <button key={id} onClick={() => setSelectedMode(id)}
+              className={`card p-5 text-left transition-all border-2 ${selectedMode === id ? 'border-yellow-500 bg-yellow-500/5 shadow-glow-yellow' : 'border-dark-300 hover:border-dark-400'}`}>
+              <Icon size={28} className={`mb-2 ${selectedMode === id ? 'text-yellow-500' : 'text-gray-500'}`} />
+              <div className="font-bold text-lg">{label}</div>
+              <div className="text-sm text-gray-400 mt-1">{desc}</div>
               <div className="mt-3 text-xs text-gray-500">
-                En queue: <span className="text-yellow-500 font-bold">{queueInfo[m.id]?.SOLO + queueInfo[m.id]?.TEAM || 0}</span> joueurs
+                En queue: <span className="text-yellow-500 font-bold">{queueInfo[id]?.SOLO + queueInfo[id]?.TEAM || 0}</span> joueurs
               </div>
             </button>
           ))}
@@ -209,12 +210,12 @@ export default function Matchmaking() {
       <div className="mb-8">
         <h2 className="font-bold mb-3 text-gray-300">2. Type de queue</h2>
         <div className="grid md:grid-cols-2 gap-4">
-          {QUEUE_TYPES.map(t => (
-            <button key={t.id} onClick={() => setSelectedType(t.id)}
-              className={`card p-5 text-left transition-all border-2 ${selectedType === t.id ? 'border-blue-500 bg-blue-500/5 shadow-glow-blue' : 'border-dark-300 hover:border-dark-400'}`}>
-              <div className="text-3xl mb-2">{t.icon}</div>
-              <div className="font-bold">{t.label}</div>
-              <div className="text-sm text-gray-400 mt-1">{t.desc}</div>
+          {QUEUE_TYPES.map(({ id, label, Icon, desc }) => (
+            <button key={id} onClick={() => setSelectedType(id)}
+              className={`card p-5 text-left transition-all border-2 ${selectedType === id ? 'border-blue-500 bg-blue-500/5 shadow-glow-blue' : 'border-dark-300 hover:border-dark-400'}`}>
+              <Icon size={28} className={`mb-2 ${selectedType === id ? 'text-blue-400' : 'text-gray-500'}`} />
+              <div className="font-bold">{label}</div>
+              <div className="text-sm text-gray-400 mt-1">{desc}</div>
             </button>
           ))}
         </div>
@@ -225,16 +226,16 @@ export default function Matchmaking() {
         <div className="card p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-sm">Statut de l'équipe: <span style={{ color: '#FFCB05' }}>{currentTeam.name}</span></h3>
-            <button onClick={refreshTeamOnline} className="text-xs text-gray-500 hover:text-gray-300">↻ Rafraîchir</button>
+            <button onClick={refreshTeamOnline} className="text-gray-500 hover:text-gray-300 transition-colors"><RefreshCw size={13} /></button>
           </div>
           <div className="space-y-2">
             {(currentTeam.members || []).map(m => {
               const isOnline = !!teamOnline[m.userId];
               return (
                 <div key={m.userId} className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-gray-600'}`} />
+                  {isOnline ? <Wifi size={12} className="text-green-400" /> : <WifiOff size={12} className="text-gray-600" />}
                   <span className="text-sm text-gray-300">{m.user?.username}</span>
-                  {m.role === 'CAPTAIN' && <span className="text-xs text-yellow-500">👑</span>}
+                  {m.role === 'CAPTAIN' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,203,5,0.15)', color: '#FFCB05' }}>CAP</span>}
                   <span className={`ml-auto text-xs ${isOnline ? 'text-green-400' : 'text-gray-600'}`}>
                     {isOnline ? 'En ligne' : 'Hors ligne'}
                   </span>
@@ -275,8 +276,8 @@ export default function Matchmaking() {
             : null;
           return (
             <>
-              <button onClick={handleJoin} disabled={disabled} className="btn-primary text-lg px-12 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                {joining ? 'Rejoindre...' : '⚔️ Rejoindre la file'}
+              <button onClick={handleJoin} disabled={disabled} className="btn-primary text-lg px-12 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto">
+                {joining ? <><RefreshCw size={16} className="animate-spin" /> Recherche...</> : <><Swords size={16} /> Rejoindre la file</>}
               </button>
               {reason && <p className="text-xs text-red-400 mt-2">{reason}</p>}
             </>

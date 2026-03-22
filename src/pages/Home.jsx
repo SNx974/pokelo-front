@@ -7,13 +7,17 @@ import Avatar from '../components/ui/Avatar';
 import RankBadge from '../components/ui/RankBadge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import {
+  User, Trophy, Newspaper, Users, Shield, Swords,
+  Zap, Clock, ChevronRight,
+} from 'lucide-react';
 
 /* ── Small helpers ──────────────────────────────────────── */
-function GoldHeader({ icon, label }) {
+function GoldHeader({ icon: Icon, label }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2.5 font-bold uppercase tracking-widest text-xs"
       style={{ background: 'linear-gradient(90deg, rgba(255,203,5,0.18), transparent)', borderBottom: '1px solid rgba(255,203,5,0.2)', color: '#FFCB05' }}>
-      <span>{icon}</span> {label}
+      {Icon && <Icon size={13} />} {label}
     </div>
   );
 }
@@ -159,7 +163,10 @@ function HeroSection({ user }) {
             className="btn-primary px-16 py-4 rounded-xl text-lg font-bebas tracking-widest uppercase"
             style={{ fontSize: '1.1rem', letterSpacing: '0.15em', minWidth: 320 }}
           >
-            {joining ? '⏳ Recherche...' : '⚔️ Lancer la Recherche'}
+            {joining
+              ? <span className="flex items-center gap-2"><Clock size={16} className="animate-spin" /> Recherche...</span>
+              : <span className="flex items-center gap-2"><Swords size={16} /> Lancer la Recherche</span>
+            }
           </button>
         </div>
       </div>
@@ -171,7 +178,7 @@ function HeroSection({ user }) {
 function ProfileCard({ user }) {
   if (!user) return (
     <GameCard>
-      <GoldHeader icon="💠" label="Mon Profil" />
+      <GoldHeader icon={User} label="Mon Profil" />
       <div className="p-5 text-center">
         <p className="text-gray-400 text-sm mb-4">Connectez-vous pour voir votre profil</p>
         <Link to="/login" className="btn-primary px-6 py-2 text-sm rounded-lg">Se connecter</Link>
@@ -181,7 +188,7 @@ function ProfileCard({ user }) {
   const winrate = user.totalMatches > 0 ? Math.round(user.wins / user.totalMatches * 100) : 0;
   return (
     <GameCard>
-      <GoldHeader icon="💠" label="Mon Profil" />
+      <GoldHeader icon={User} label="Mon Profil" />
       <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="relative">
@@ -191,7 +198,7 @@ function ProfileCard({ user }) {
           <div>
             <div className="font-bold text-base">{user.username}</div>
             <div className="flex items-center gap-1 text-sm" style={{ color: '#FFCB05' }}>
-              <span>⚡</span>
+              <Zap size={13} />
               <span className="font-bold">Elo: {user.eloGlobal}</span>
             </div>
           </div>
@@ -222,7 +229,7 @@ function LadderCard({ players }) {
   const rankColors = ['#FFCB05', '#94a3b8', '#cd7f32'];
   return (
     <GameCard>
-      <GoldHeader icon="🏆" label="Top Ladder" />
+      <GoldHeader icon={Trophy} label="Top Ladder" />
       <div className="p-4 space-y-2">
         {players.slice(0, 3).map((p, i) => (
           <Link key={p.id} to={`/profile/${p.id}`}
@@ -253,14 +260,14 @@ function LadderCard({ players }) {
 function NewsCard({ news }) {
   return (
     <GameCard>
-      <GoldHeader icon="📢" label="Actualités" />
+      <GoldHeader icon={Newspaper} label="Actualités" />
       <div className="p-4 space-y-3">
         {news.slice(0, 2).map(n => (
           <div key={n.id} className="flex items-start gap-3 p-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
             {/* Thumbnail */}
-            <div className="w-16 h-12 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl"
+            <div className="w-16 h-12 rounded-lg flex-shrink-0 flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, #1a3a5c, #0d1f3c)', border: '1px solid rgba(255,203,5,0.2)' }}>
-              {n.isPinned ? '📌' : '📰'}
+              <Newspaper size={20} className={n.isPinned ? 'text-yellow-500' : 'text-gray-500'} />
             </div>
             <div className="min-w-0">
               <div className="text-sm font-bold leading-tight line-clamp-1">{n.title}</div>
@@ -278,9 +285,9 @@ function NewsCard({ news }) {
 function FindTeamCard() {
   return (
     <GameCard className="relative overflow-hidden">
-      <GoldHeader icon="🛡️" label="Trouvez une Équipe" />
+      <GoldHeader icon={Shield} label="Trouvez une Équipe" />
       <div className="p-5 flex items-center gap-4">
-        <div className="text-5xl flex-shrink-0">👥</div>
+        <Users size={42} className="flex-shrink-0 text-yellow-500/60" />
         <div className="flex-1 min-w-0">
           <p className="text-gray-300 text-sm mb-3">Rejoignez ou créez votre équipe pour jouer en Team Queue !</p>
           <Link to="/teams"

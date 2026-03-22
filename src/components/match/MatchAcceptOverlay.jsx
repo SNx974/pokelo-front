@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { matchesApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { onWS } from '../../services/websocket';
+import { Gamepad2, Check, X, UserCheck } from 'lucide-react';
+import { SiPokemon } from '@icons-pack/react-simple-icons';
 
 /**
  * Overlay plein écran qui apparaît quand un match PENDING est trouvé.
@@ -114,7 +116,9 @@ export default function MatchAcceptOverlay() {
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 text-center">
-          <div className="text-4xl mb-2">🎮</div>
+          <div className="flex items-center justify-center mb-2">
+            <SiPokemon size={36} style={{ color: '#FFCB05' }} />
+          </div>
           <h2 className="font-bebas text-3xl tracking-wider" style={{ color: '#FFCB05' }}>MATCH TROUVÉ !</h2>
           <p className="text-gray-400 text-sm mt-1">{pendingMatch.mode?.replace('_', ' ')} — {pendingMatch.queueType}</p>
         </div>
@@ -161,7 +165,10 @@ export default function MatchAcceptOverlay() {
         <div className="px-6 pb-6">
           {alreadyResponded ? (
             <div className="text-center py-3 rounded-xl text-sm font-semibold text-gray-400" style={{ background: 'rgba(255,255,255,0.05)' }}>
-              {myAcceptance?.accepted ? '✅ Vous avez accepté — en attente des autres joueurs...' : '❌ Vous avez refusé'}
+              {myAcceptance?.accepted
+                ? <span className="flex items-center justify-center gap-1.5"><UserCheck size={14} className="text-green-400" /> Vous avez accepté — en attente...</span>
+                : <span className="flex items-center justify-center gap-1.5"><X size={14} className="text-red-400" /> Vous avez refusé</span>
+              }
             </div>
           ) : (
             <div className="flex gap-3">
@@ -176,10 +183,10 @@ export default function MatchAcceptOverlay() {
               <button
                 onClick={handleAccept}
                 disabled={loading}
-                className="flex-2 flex-1 py-3 rounded-xl font-bold text-sm text-gray-900 transition-all disabled:opacity-50"
+                className="flex-2 flex-1 py-3 rounded-xl font-bold text-sm text-gray-900 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: '#FFCB05', flexGrow: 2 }}
               >
-                {loading ? '...' : 'Accepter ✓'}
+                {loading ? <Gamepad2 size={15} className="animate-pulse" /> : <><Check size={15} /> Accepter</>}
               </button>
             </div>
           )}
