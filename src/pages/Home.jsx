@@ -50,7 +50,6 @@ function HeroSection({ user }) {
       backgroundSize: 'cover',
       backgroundPosition: 'center top',
       minHeight: 420,
-      borderBottom: '2px solid rgba(255,203,5,0.25)',
     }}>
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -440,8 +439,11 @@ export default function Home() {
       <HeroSection user={user} />
 
       {/* Dashboard grid */}
-      <div style={{ backgroundImage: 'url(/bg2.png)', backgroundSize: 'cover', backgroundPosition: 'center top', position: 'relative', borderTop: '2px solid rgba(255,203,5,0.25)' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,13,26,0.72)' }} />
+      <div style={{ backgroundImage: 'url(/bg2.png)', backgroundSize: 'cover', backgroundPosition: 'center center', position: 'relative' }}>
+        {/* Overlay sombre global */}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,13,26,0.88)' }} />
+        {/* Fondu haut pour une transition nette avec hero */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to bottom, rgba(5,13,26,1) 0%, transparent 100%)', zIndex: 1 }} />
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
         {/* Pikachu — à gauche du container, à cheval sur la transition */}
         <img
