@@ -28,25 +28,50 @@ function GameCard({ children, className = '' }) {
   );
 }
 
+function QueueTimer({ seconds }) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return <span className="font-mono text-5xl font-bold" style={{ color: '#FFCB05' }}>{m}:{s}</span>;
+}
+
 /* ── Hero / Queue section ───────────────────────────────── */
 function HeroSection({ user }) {
   const navigate = useNavigate();
-  const { joinQueue } = useMatchmakingStore();
+  const {
+    inQueue, queueEntry, waitTime, queueInfo,
+    joinQueue, leaveQueue, fetchQueueInfo, checkStatus,
+  } = useMatchmakingStore();
   const [selectedMode, setSelectedMode] = useState('SOLO');
   const [selectedFormat, setSelectedFormat] = useState('TWO_V_TWO');
   const [joining, setJoining] = useState(false);
-  const [zooming, setZooming] = useState(false);
+
+  useEffect(() => {
+    checkStatus();
+    fetchQueueInfo();
+    const iv = setInterval(fetchQueueInfo, 8000);
+    return () => clearInterval(iv);
+  }, []);
 
   const handleSearch = async () => {
     if (!user) { navigate('/login'); return; }
-    setZooming(true);
-    setTimeout(async () => {
-      setJoining(true);
-      const res = await joinQueue(selectedFormat, selectedMode);
-      setJoining(false);
-      navigate('/matchmaking');
-    }, 500);
+    setJoining(true);
+    const res = await joinQueue(selectedFormat, selectedMode);
+    setJoining(false);
+    if (!res?.success) alert(res?.error || 'Erreur');
   };
+
+  const playersInQueue = queueEntry
+    ? (queueInfo[queueEntry.mode]?.SOLO || 0) + (queueInfo[queueEntry.mode]?.TEAM || 0)
+    : 0;
+
+  const bgOverlays = (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,13,26,0.45) 0%, rgba(5,13,26,0.35) 50%, rgba(5,13,26,0.0) 80%)' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, background: 'linear-gradient(to bottom, transparent 0%, rgba(5,13,26,0.7) 50%, rgba(5,13,26,1) 100%)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.08) 0%, transparent 70%)' }} />
+      <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.07) 0%, transparent 70%)' }} />
+    </div>
+  );
 
   return (
     <section className="relative overflow-hidden" style={{
@@ -55,134 +80,137 @@ function HeroSection({ user }) {
       backgroundPosition: 'center top',
       minHeight: 560,
     }}>
-      {/* Overlays */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Assombrissement général */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,13,26,0.45) 0%, rgba(5,13,26,0.35) 50%, rgba(5,13,26,0.0) 80%)' }} />
-        {/* Fondu bas — masque la démarcation */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, background: 'linear-gradient(to bottom, transparent 0%, rgba(5,13,26,0.7) 50%, rgba(5,13,26,1) 100%)' }} />
-        {/* Side lights */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.08) 0%, transparent 70%)' }} />
-        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.07) 0%, transparent 70%)' }} />
-      </div>
+      {bgOverlays}
 
-      <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-20">
-        {/* Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest"
-            style={{ background: 'rgba(255,203,5,0.12)', border: '1px solid rgba(255,203,5,0.3)', color: '#FFCB05' }}>
-            <span className="animate-pulse">●</span> Battle Ranked — Saison 1
-          </div>
-          <h1 className="font-bebas text-5xl md:text-6xl tracking-wide mb-2">
-            Combattez en{' '}
-            <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>2v2</span>
-            {' '}&{' '}
-            <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>5v5</span>
-          </h1>
-          <p className="text-gray-400 text-base font-semibold italic">
-            Rejoignez le Battle Ranked et grimpez dans le classement !
+      {/* ── EN QUEUE ── */}
+      {inQueue ? (
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-16 animate-fade-in">
+          {/* Spinner */}
+          <div className="w-24 h-24 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mb-8" />
+
+          <h2 className="font-bebas text-4xl tracking-wider mb-1" style={{ color: '#FFCB05' }}>
+            Recherche d'adversaires...
+          </h2>
+          <p className="text-gray-400 mb-6 text-sm font-semibold">
+            {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {queueEntry?.queueType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}
           </p>
-        </div>
 
-        {/* Queue cards */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          {/* Solo Queue — Lucario en superposition */}
-          <div
-            role="button" tabIndex={0}
-            onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
-            onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
-            className={`queue-card queue-card-solo text-left p-5 relative ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}
-            style={{ overflow: 'visible' }}>
-            {/* Lucario superposé sur le coin droit — caché sur mobile */}
-            <img
-              src="/lucario.png" alt="Lucario"
-              className="hidden md:block"
-              style={{
-                position: 'absolute', bottom: 0, right: 0,
-                height: 260, width: 'auto', objectFit: 'contain',
-                filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))',
-                pointerEvents: 'none', zIndex: 10,
-              }}
-            />
-            <div style={{ position: 'relative', zIndex: 3 }}>
-              <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
-              <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
-              <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
+          {/* Timer */}
+          <QueueTimer seconds={waitTime} />
+          <p className="text-gray-500 text-xs mt-2 mb-8">Temps d'attente</p>
+
+          {/* Stats */}
+          <div className="flex gap-8 mb-8">
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono" style={{ color: '#FFCB05' }}>{playersInQueue}</div>
+              <div className="text-xs text-gray-500 mt-0.5">Joueurs en file</div>
             </div>
-            {selectedMode === 'SOLO' && (
-              <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
-                {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
-                  <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
-                    className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
-                    {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
-                  </span>
-                ))}
+            <div className="w-px bg-white/10" />
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-blue-400">
+                {queueEntry?.mode === 'TWO_V_TWO' ? user?.elo2v2 : user?.elo5v5}
               </div>
-            )}
+              <div className="text-xs text-gray-500 mt-0.5">Votre Elo</div>
+            </div>
+            <div className="w-px bg-white/10" />
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-green-400">
+                {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}
+              </div>
+              <div className="text-xs text-gray-500 mt-0.5">Format</div>
+            </div>
           </div>
 
-          {/* Team Queue */}
-          <div
-            role="button" tabIndex={0}
-            onClick={() => { setSelectedMode('TEAM'); setSelectedFormat('FIVE_V_FIVE'); }}
-            onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
-            className={`queue-card queue-card-team text-left p-5 relative ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}
-            style={{ overflow: 'visible' }}>
-            {/* Dracofeu superposé sur le coin droit — caché sur mobile */}
-            <img
-              src="/Dracofeu.png" alt="Dracofeu"
-              className="hidden md:block"
-              style={{
-                position: 'absolute', bottom: 0, right: 0,
-                height: 260, width: 'auto', objectFit: 'contain',
-                filter: 'drop-shadow(0 0 20px rgba(220,80,20,0.8))',
-                pointerEvents: 'none', zIndex: 10,
-              }}
-            />
-            <div style={{ position: 'relative', zIndex: 3 }}>
-              <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
-              <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
-              <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
-            </div>
-            {selectedMode === 'TEAM' && (
-              <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
-                {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
-                  <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
-                    className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
-                    {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* CTA Button */}
-        <div className="flex justify-center">
+          {/* Leave button */}
           <button
-            onClick={handleSearch}
-            disabled={joining || zooming}
-            className="btn-primary px-16 py-4 rounded-xl text-lg font-bebas tracking-widest uppercase"
-            style={{ fontSize: '1.1rem', letterSpacing: '0.15em', minWidth: 320 }}
+            onClick={leaveQueue}
+            className="px-12 py-3 rounded-xl font-bebas text-lg tracking-widest uppercase transition-all hover:scale-105"
+            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171' }}
           >
-            {joining ? '⏳ Recherche...' : '⚔️ Lancer la Recherche'}
+            ✕ Quitter la file
           </button>
         </div>
-      </div>
 
-      {/* Zoom transition overlay */}
-      {zooming && (
-        <div
-          className="zoom-transition-overlay"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            background: '#050d1a',
-            transformOrigin: 'center center',
-            pointerEvents: 'none',
-          }}
-        />
+      ) : (
+        /* ── NORMAL HERO ── */
+        <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-20">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest"
+              style={{ background: 'rgba(255,203,5,0.12)', border: '1px solid rgba(255,203,5,0.3)', color: '#FFCB05' }}>
+              <span className="animate-pulse">●</span> Battle Ranked — Saison 1
+            </div>
+            <h1 className="font-bebas text-5xl md:text-6xl tracking-wide mb-2">
+              Combattez en{' '}
+              <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>2v2</span>
+              {' '}&{' '}
+              <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>5v5</span>
+            </h1>
+            <p className="text-gray-400 text-base font-semibold italic">
+              Rejoignez le Battle Ranked et grimpez dans le classement !
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div role="button" tabIndex={0}
+              onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
+              onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
+              className={`queue-card queue-card-solo text-left p-5 relative ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}
+              style={{ overflow: 'visible' }}>
+              <img src="/lucario.png" alt="Lucario" className="hidden md:block"
+                style={{ position: 'absolute', bottom: 0, right: 0, height: 260, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))', pointerEvents: 'none', zIndex: 10 }} />
+              <div style={{ position: 'relative', zIndex: 3 }}>
+                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
+                <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
+                <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
+              </div>
+              {selectedMode === 'SOLO' && (
+                <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
+                  {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
+                    <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
+                      className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
+                      {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div role="button" tabIndex={0}
+              onClick={() => { setSelectedMode('TEAM'); setSelectedFormat('FIVE_V_FIVE'); }}
+              onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
+              className={`queue-card queue-card-team text-left p-5 relative ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}
+              style={{ overflow: 'visible' }}>
+              <img src="/Dracofeu.png" alt="Dracofeu" className="hidden md:block"
+                style={{ position: 'absolute', bottom: 0, right: 0, height: 260, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(220,80,20,0.8))', pointerEvents: 'none', zIndex: 10 }} />
+              <div style={{ position: 'relative', zIndex: 3 }}>
+                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
+                <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
+                <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
+              </div>
+              {selectedMode === 'TEAM' && (
+                <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
+                  {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
+                    <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
+                      className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
+                      {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={handleSearch}
+              disabled={joining}
+              className="btn-primary px-16 py-4 rounded-xl text-lg font-bebas tracking-widest uppercase"
+              style={{ fontSize: '1.1rem', letterSpacing: '0.15em', minWidth: 320 }}
+            >
+              {joining ? '⏳ Recherche...' : '⚔️ Lancer la Recherche'}
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );
