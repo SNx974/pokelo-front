@@ -49,7 +49,7 @@ function HeroSection({ user }) {
       backgroundImage: 'url(/bg3.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center top',
-      minHeight: 420,
+      minHeight: 560,
     }}>
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -60,7 +60,7 @@ function HeroSection({ user }) {
         <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.07) 0%, transparent 70%)' }} />
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-10">
+      <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-20">
         {/* Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest"
