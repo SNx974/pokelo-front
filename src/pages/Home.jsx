@@ -1,95 +1,404 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ladderApi, newsApi, tournamentsApi } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { ladderApi, newsApi, tournamentsApi, matchesApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { useMatchmakingStore } from '../store/matchmakingStore';
 import Avatar from '../components/ui/Avatar';
 import RankBadge from '../components/ui/RankBadge';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-function HeroSection({ user, stats }) {
+/* ── Small helpers ──────────────────────────────────────── */
+function GoldHeader({ icon, label }) {
   return (
-    <section className="relative overflow-hidden py-20 px-4" style={{ background: 'radial-gradient(ellipse at top, #1a2035 0%, #0D0F14 70%)' }}>
-      {/* BG decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl" />
+    <div className="flex items-center gap-2 px-4 py-2.5 font-bold uppercase tracking-widest text-xs"
+      style={{ background: 'linear-gradient(90deg, rgba(255,203,5,0.18), transparent)', borderBottom: '1px solid rgba(255,203,5,0.2)', color: '#FFCB05' }}>
+      <span>{icon}</span> {label}
+    </div>
+  );
+}
+
+function GameCard({ children, className = '' }) {
+  return (
+    <div className={`rounded-xl overflow-hidden relative ${className}`}
+      style={{ background: 'linear-gradient(180deg, #0d1f3c 0%, #071428 100%)', border: '1px solid rgba(255,203,5,0.22)' }}>
+      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg, transparent, #FFCB05 40%, #F59E0B 60%, transparent)' }} />
+      {children}
+    </div>
+  );
+}
+
+/* ── Hero / Queue section ───────────────────────────────── */
+function HeroSection({ user }) {
+  const navigate = useNavigate();
+  const { joinQueue } = useMatchmakingStore();
+  const [selectedMode, setSelectedMode] = useState('SOLO');
+  const [selectedFormat, setSelectedFormat] = useState('TWO_V_TWO');
+  const [joining, setJoining] = useState(false);
+
+  const handleSearch = async () => {
+    if (!user) { navigate('/login'); return; }
+    setJoining(true);
+    const res = await joinQueue(selectedFormat, selectedMode);
+    setJoining(false);
+    if (res?.success) navigate('/matchmaking');
+  };
+
+  return (
+    <section className="relative overflow-hidden" style={{
+      background: 'linear-gradient(180deg, #0a1e40 0%, #05122e 40%, #050d1a 100%)',
+      minHeight: 420,
+    }}>
+      {/* Stadium atmosphere */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Top glow */}
+        <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', width: '700px', height: '300px', background: 'radial-gradient(ellipse, rgba(42,117,187,0.25) 0%, transparent 70%)' }} />
+        {/* Side lights */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.12) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.10) 0%, transparent 70%)' }} />
+        {/* Grid lines decoration */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,203,5,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,203,5,0.03) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
-      <div className="relative max-w-5xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-4 py-1.5 text-yellow-500 text-sm font-medium mb-6">
-          <span className="animate-pulse">●</span> Saison 1 en cours
-        </div>
-
-        <h1 className="font-display font-bold text-5xl md:text-7xl mb-4 leading-tight">
-          La compétition<br />
-          <span className="text-gradient-yellow">Pokémon</span> commence ici
-        </h1>
-        <p className="text-gray-400 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-          Matchmaking 2v2 & 5v5, système Elo compétitif, ladder mondial.<br />
-          Prouve que tu es le meilleur dresseur.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          {user ? (
-            <Link to="/matchmaking" className="btn-primary text-lg px-8 py-3">
-              ⚔️ Jouer maintenant
-            </Link>
-          ) : (
-            <>
-              <Link to="/register" className="btn-primary text-lg px-8 py-3">🚀 Commencer gratuitement</Link>
-              <Link to="/ladder" className="btn-ghost text-lg px-8 py-3">🏆 Voir le classement</Link>
-            </>
-          )}
-        </div>
-
-        {/* Stats bar */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            {[
-              { label: 'Joueurs', value: stats.totalPlayers?.toLocaleString() },
-              { label: 'Matchs joués', value: stats.totalMatches?.toLocaleString() },
-              { label: 'Équipes', value: stats.totalTeams?.toLocaleString() },
-              { label: 'En ligne', value: stats.onlinePlayers },
-            ].map(s => (
-              <div key={s.label} className="card p-3 text-center">
-                <div className="text-2xl font-bold font-display text-yellow-500">{s.value ?? '—'}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-              </div>
-            ))}
+      <div className="relative max-w-5xl mx-auto px-4 pt-16 pb-10">
+        {/* Title */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest"
+            style={{ background: 'rgba(255,203,5,0.12)', border: '1px solid rgba(255,203,5,0.3)', color: '#FFCB05' }}>
+            <span className="animate-pulse">●</span> Battle Ranked — Saison 1
           </div>
-        )}
+          <h1 className="font-bebas text-5xl md:text-6xl tracking-wide mb-2">
+            Combattez en{' '}
+            <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>2v2</span>
+            {' '}&{' '}
+            <span style={{ color: '#FFCB05', textShadow: '0 0 30px rgba(255,203,5,0.5)' }}>5v5</span>
+          </h1>
+          <p className="text-gray-400 text-base font-semibold italic">
+            Rejoignez le Battle Ranked et grimpez dans le classement !
+          </p>
+        </div>
+
+        {/* Queue cards */}
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          {/* Solo Queue */}
+          <div
+            role="button" tabIndex={0}
+            onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
+            onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
+            className={`queue-card queue-card-solo text-left p-5 ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
+                <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
+                <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
+              </div>
+              <div className="flex gap-1 text-4xl opacity-70 ml-2">
+                <span>🦊</span><span>🔵</span>
+              </div>
+            </div>
+            {selectedMode === 'SOLO' && (
+              <div className="mt-3 flex gap-2">
+                {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
+                  <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
+                    {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Team Queue */}
+          <div
+            role="button" tabIndex={0}
+            onClick={() => { setSelectedMode('TEAM'); setSelectedFormat('FIVE_V_FIVE'); }}
+            onKeyDown={e => e.key === 'Enter' && setSelectedMode('TEAM')}
+            className={`queue-card queue-card-team text-left p-5 ${selectedMode === 'TEAM' ? 'selected-team' : ''}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(192,57,43,0.8)' }}>Team Queue</div>
+                <div className="text-red-400 font-bold text-sm">2vs / 5vs — En équipe</div>
+                <p className="text-gray-400 text-xs mt-2">Jouez avec votre équipe.<br />Coordination & stratégie.</p>
+              </div>
+              <div className="flex gap-1 text-4xl opacity-70 ml-2">
+                <span>🔥</span><span>🐉</span>
+              </div>
+            </div>
+            {selectedMode === 'TEAM' && (
+              <div className="mt-3 flex gap-2">
+                {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
+                  <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
+                    {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <div className="flex justify-center">
+          <button
+            onClick={handleSearch}
+            disabled={joining}
+            className="btn-primary px-16 py-4 rounded-xl text-lg font-bebas tracking-widest uppercase"
+            style={{ fontSize: '1.1rem', letterSpacing: '0.15em', minWidth: 320 }}
+          >
+            {joining ? '⏳ Recherche...' : '⚔️ Lancer la Recherche'}
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
-function TopPlayerCard({ player, position }) {
-  const medals = ['🥇', '🥈', '🥉'];
+/* ── Mon Profil card ──────────────────────────────────────*/
+function ProfileCard({ user }) {
+  if (!user) return (
+    <GameCard>
+      <GoldHeader icon="💠" label="Mon Profil" />
+      <div className="p-5 text-center">
+        <p className="text-gray-400 text-sm mb-4">Connectez-vous pour voir votre profil</p>
+        <Link to="/login" className="btn-primary px-6 py-2 text-sm rounded-lg">Se connecter</Link>
+      </div>
+    </GameCard>
+  );
+  const winrate = user.totalMatches > 0 ? Math.round(user.wins / user.totalMatches * 100) : 0;
   return (
-    <Link to={`/profile/${player.id}`} className="card-hover p-4 flex items-center gap-3">
-      <span className="text-xl w-8 text-center">{medals[position - 1] || `#${position}`}</span>
-      <Avatar src={player.avatarUrl} username={player.username} size={40} />
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm truncate">{player.username}</div>
-        <RankBadge rank={player.rank} />
+    <GameCard>
+      <GoldHeader icon="💠" label="Mon Profil" />
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="relative">
+            <Avatar src={user.avatarUrl} username={user.username} size={48} />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-400 border-2 border-navy" />
+          </div>
+          <div>
+            <div className="font-bold text-base">{user.username}</div>
+            <div className="flex items-center gap-1 text-sm" style={{ color: '#FFCB05' }}>
+              <span>⚡</span>
+              <span className="font-bold">Elo: {user.eloGlobal}</span>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-3 text-center text-sm">
+          <div className="rounded-lg py-1.5" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
+            <div className="font-bold text-green-400">{user.wins}</div>
+            <div className="text-xs text-gray-500">Victoires</div>
+          </div>
+          <div className="rounded-lg py-1.5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <div className="font-bold text-red-400">{user.losses}</div>
+            <div className="text-xs text-gray-500">Défaites</div>
+          </div>
+        </div>
+        <Link to={`/profile/${user.id}`}
+          className="flex items-center justify-center gap-2 w-full py-2 rounded-lg font-bold text-sm transition-all hover:-translate-y-px"
+          style={{ background: 'linear-gradient(135deg, #FFCB05, #F59E0B)', color: '#050d1a' }}>
+          Voir Profil →
+        </Link>
       </div>
-      <div className="text-right">
-        <div className="font-bold text-yellow-500">{player.eloGlobal}</div>
-        <div className="text-xs text-gray-500">{player.winrate}% WR</div>
-      </div>
-    </Link>
+    </GameCard>
   );
 }
 
+/* ── Top Ladder card ──────────────────────────────────────*/
+function LadderCard({ players }) {
+  const medals = ['🥇', '🥈', '🥉'];
+  const rankColors = ['#FFCB05', '#94a3b8', '#cd7f32'];
+  return (
+    <GameCard>
+      <GoldHeader icon="🏆" label="Top Ladder" />
+      <div className="p-4 space-y-2">
+        {players.slice(0, 3).map((p, i) => (
+          <Link key={p.id} to={`/profile/${p.id}`}
+            className="flex items-center gap-3 p-2 rounded-lg transition-all hover:bg-white/5">
+            <span className="text-lg w-6 text-center">{medals[i]}</span>
+            <Avatar src={p.avatarUrl} username={p.username} size={32} />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold truncate">{p.username}</div>
+            </div>
+            <div className="font-bold text-sm" style={{ color: rankColors[i] }}>{p.eloGlobal}</div>
+            <RankBadge rank={p.rank} />
+          </Link>
+        ))}
+        {players.length === 0 && <p className="text-gray-500 text-xs text-center py-3">Aucun joueur</p>}
+        <div className="pt-1">
+          <Link to="/ladder"
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg font-bold text-sm transition-all hover:-translate-y-px text-white"
+            style={{ background: 'linear-gradient(135deg, #1a4a8a, #2A75BB)', boxShadow: '0 4px 12px rgba(42,117,187,0.35)' }}>
+            Voir le Classement
+          </Link>
+        </div>
+      </div>
+    </GameCard>
+  );
+}
+
+/* ── Actualités card ──────────────────────────────────────*/
+function NewsCard({ news }) {
+  return (
+    <GameCard>
+      <GoldHeader icon="📢" label="Actualités" />
+      <div className="p-4 space-y-3">
+        {news.slice(0, 2).map(n => (
+          <div key={n.id} className="flex items-start gap-3 p-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+            {/* Thumbnail */}
+            <div className="w-16 h-12 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl"
+              style={{ background: 'linear-gradient(135deg, #1a3a5c, #0d1f3c)', border: '1px solid rgba(255,203,5,0.2)' }}>
+              {n.isPinned ? '📌' : '📰'}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold leading-tight line-clamp-1">{n.title}</div>
+              <div className="text-xs text-gray-400 mt-0.5 line-clamp-2 italic">{n.content}</div>
+            </div>
+          </div>
+        ))}
+        {news.length === 0 && <p className="text-gray-500 text-xs text-center py-3">Aucune actualité</p>}
+      </div>
+    </GameCard>
+  );
+}
+
+/* ── Trouvez une équipe ───────────────────────────────────*/
+function FindTeamCard() {
+  return (
+    <GameCard className="relative overflow-hidden">
+      <GoldHeader icon="🛡️" label="Trouvez une Équipe" />
+      <div className="p-5 flex items-center gap-4">
+        <div className="text-5xl flex-shrink-0">👥</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-300 text-sm mb-3">Rejoignez ou créez votre équipe pour jouer en Team Queue !</p>
+          <Link to="/teams"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm transition-all hover:-translate-y-px"
+            style={{ background: 'linear-gradient(135deg, #FFCB05, #F59E0B)', color: '#050d1a', boxShadow: '0 4px 12px rgba(255,203,5,0.3)' }}>
+            Rechercher une Équipe
+          </Link>
+        </div>
+      </div>
+    </GameCard>
+  );
+}
+
+/* ── Derniers matchs ──────────────────────────────────────*/
+function LastMatchesCard({ matches }) {
+  return (
+    <GameCard>
+      <GoldHeader icon="⚔️" label="Derniers Matchs" />
+      <div className="p-4 space-y-2">
+        {matches.length === 0 && <p className="text-gray-500 text-xs text-center py-3">Aucun match récent</p>}
+        {matches.slice(0, 4).map(m => {
+          const myPart = m.participants?.[0];
+          const won = myPart?.isWinner;
+          const change = myPart?.eloChange ?? 0;
+          const mode = m.mode === 'TWO_V_TWO' ? '2v2' : '5v5';
+          return (
+            <Link key={m.id} to={`/match/${m.id}`}
+              className="flex items-center gap-3 p-2.5 rounded-lg transition-all hover:bg-white/5"
+              style={{ border: `1px solid ${won === true ? 'rgba(34,197,94,0.2)' : won === false ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
+              {/* Pokémon icons */}
+              <div className="flex gap-0.5 text-xl">
+                <span>{m.mode === 'TWO_V_TWO' ? '⚔️' : '🎮'}</span>
+              </div>
+              {/* Result badge */}
+              <div className={`px-2 py-0.5 rounded text-xs font-bold flex-shrink-0 ${
+                won === true ? 'bg-green-500/20 text-green-400' :
+                won === false ? 'bg-red-500/20 text-red-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                {won === true ? 'Victoire' : won === false ? 'Défaite' : 'En cours'}
+              </div>
+              <span className="text-xs text-gray-400 font-semibold">{mode}</span>
+              <div className="ml-auto text-sm font-bold">
+                {m.status === 'COMPLETED' && (
+                  <span className={change >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    {change >= 0 ? '+' : ''}{change} Elo
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </GameCard>
+  );
+}
+
+/* ── Tournois Banner ──────────────────────────────────────*/
+function TournoisBanner({ tournaments }) {
+  const next = tournaments.find(t => t.status === 'UPCOMING') || tournaments[0];
+  return (
+    <div className="relative rounded-xl overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #1a0a2e 0%, #2d0a5e 30%, #1a0a2e 100%)',
+      border: '1px solid rgba(255,203,5,0.25)',
+      minHeight: 120,
+    }}>
+      {/* Gold top border */}
+      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg, transparent, #FFCB05 50%, transparent)' }} />
+      {/* BG decoration */}
+      <div className="absolute inset-0 flex items-center justify-end pr-8 pointer-events-none opacity-10">
+        <span className="text-9xl">🌌</span>
+      </div>
+      <div className="relative p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">🏆</span>
+            <span className="font-bebas text-3xl tracking-widest text-white">Tournois à Venir</span>
+          </div>
+          {next ? (
+            <p className="text-gray-300 text-sm">
+              <span className="text-yellow-500 font-bold">{next.name}</span>
+              {next.prizePool && <span className="text-gray-400"> — Prize: <span className="text-green-400 font-bold">{next.prizePool}</span></span>}
+              <span className="text-gray-500 ml-2">
+                {format(new Date(next.startDate), 'dd MMM yyyy', { locale: fr })}
+              </span>
+            </p>
+          ) : (
+            <p className="text-gray-400 text-sm">Aucun tournoi prévu pour le moment</p>
+          )}
+        </div>
+        <Link to="/tournaments"
+          className="flex-shrink-0 px-8 py-3 rounded-xl font-bebas tracking-widest text-lg uppercase transition-all hover:-translate-y-1"
+          style={{ background: 'linear-gradient(135deg, #1a4a8a, #2A75BB)', color: '#fff', boxShadow: '0 4px 20px rgba(42,117,187,0.5)', letterSpacing: '0.1em' }}>
+          S'inscrire Maintenant
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/* ── Stats Bar ────────────────────────────────────────────*/
+function StatsBar({ stats }) {
+  if (!stats) return null;
+  const items = [
+    { label: 'Joueurs inscrits', value: stats.totalPlayers?.toLocaleString() ?? '—', icon: '👥' },
+    { label: 'Matchs joués',    value: stats.totalMatches?.toLocaleString()  ?? '—', icon: '⚔️' },
+    { label: 'Équipes',         value: stats.totalTeams?.toLocaleString()    ?? '—', icon: '🛡️' },
+    { label: 'En ligne',        value: stats.onlinePlayers ?? '—',                   icon: '🟢' },
+  ];
+  return (
+    <div className="py-3 px-4" style={{ background: 'rgba(255,203,5,0.05)', borderBottom: '1px solid rgba(255,203,5,0.12)' }}>
+      <div className="max-w-5xl mx-auto flex items-center justify-center gap-8 flex-wrap">
+        {items.map(s => (
+          <div key={s.label} className="flex items-center gap-2 text-sm">
+            <span>{s.icon}</span>
+            <span className="font-bold text-yellow-500">{s.value}</span>
+            <span className="text-gray-500">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main page ────────────────────────────────────────────*/
 export default function Home() {
   const { user } = useAuthStore();
-  const [stats, setStats] = useState(null);
-  const [topPlayers, setTopPlayers] = useState([]);
-  const [news, setNews] = useState([]);
-  const [tournaments, setTournaments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats]         = useState(null);
+  const [topPlayers, setTop]       = useState([]);
+  const [news, setNews]            = useState([]);
+  const [tournaments, setTourneys] = useState([]);
+  const [recentMatches, setMatches]= useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -97,115 +406,63 @@ export default function Home() {
       ladderApi.players({ limit: 5 }),
       newsApi.list(),
       tournamentsApi.list(),
-    ]).then(([statsRes, playersRes, newsRes, toursRes]) => {
-      setStats(statsRes.data);
-      setTopPlayers(playersRes.data.players || []);
-      setNews(newsRes.data || []);
-      setTournaments(toursRes.data || []);
-    }).catch(console.error).finally(() => setLoading(false));
+      matchesApi.list({ status: 'COMPLETED', limit: 5 }),
+    ]).then(([s, p, n, t, m]) => {
+      setStats(s.data);
+      setTop(p.data.players || []);
+      setNews(n.data || []);
+      setTourneys(t.data || []);
+      setMatches(m.data.matches || []);
+    }).catch(console.error);
   }, []);
 
-  if (loading) return <div className="flex justify-center py-32"><LoadingSpinner size="lg" text="Chargement..." /></div>;
-
   return (
-    <div>
-      <HeroSection user={user} stats={stats} />
+    <div style={{ background: '#050d1a', minHeight: '100vh' }}>
+      {/* Stats ticker */}
+      <StatsBar stats={stats} />
 
-      <div className="max-w-7xl mx-auto px-4 py-16 space-y-16">
+      {/* Hero */}
+      <HeroSection user={user} />
 
-        {/* Game modes */}
-        <section>
-          <h2 className="section-title text-center mb-8">Modes de jeu</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              { mode: '2v2', icon: '⚔️', desc: 'Affrontez une équipe de 2 joueurs. Vitesse, stratégie, coordination.', color: 'yellow' },
-              { mode: '5v5', icon: '🎮', desc: 'Bataille épique en équipe de 5. Le format phare de la compétition.', color: 'blue' },
-            ].map(m => (
-              <div key={m.mode} className={`card p-6 border-${m.color}-500/20 hover:border-${m.color}-500/40 transition-all`}>
-                <div className="text-4xl mb-3">{m.icon}</div>
-                <h3 className="font-display font-bold text-xl mb-2">{m.mode} <span className={`text-${m.color}-500`}>Compétitif</span></h3>
-                <p className="text-gray-400 text-sm mb-4">{m.desc}</p>
-                {user ? (
-                  <Link to="/matchmaking" className={`btn-${m.color === 'yellow' ? 'primary' : 'secondary'} text-sm`}>Jouer en {m.mode}</Link>
-                ) : (
-                  <Link to="/register" className={`btn-${m.color === 'yellow' ? 'primary' : 'secondary'} text-sm`}>S'inscrire pour jouer</Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* Dashboard grid */}
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Top players */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title">🏆 Top Joueurs</h2>
-              <Link to="/ladder" className="text-sm text-yellow-500 hover:text-yellow-400">Voir tout →</Link>
-            </div>
-            <div className="space-y-2">
-              {topPlayers.map((p, i) => <TopPlayerCard key={p.id} player={p} position={i + 1} />)}
-            </div>
-          </div>
-
-          {/* News */}
-          <div>
-            <h2 className="section-title mb-4">📰 Actualités</h2>
-            <div className="space-y-3">
-              {news.slice(0, 4).map(n => (
-                <div key={n.id} className="card p-4">
-                  {n.isPinned && <span className="badge bg-yellow-500/10 text-yellow-500 mb-2">📌 Épinglé</span>}
-                  <h3 className="font-semibold text-sm mb-1">{n.title}</h3>
-                  <p className="text-gray-400 text-xs line-clamp-2">{n.content}</p>
-                  <p className="text-gray-600 text-xs mt-2">{format(new Date(n.createdAt), 'dd MMM yyyy', { locale: fr })}</p>
-                </div>
-              ))}
-              {news.length === 0 && <p className="text-gray-500 text-sm">Aucune actualité.</p>}
-            </div>
-          </div>
+        {/* Row 1 — 3 columns */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <ProfileCard user={user} />
+          <LadderCard  players={topPlayers} />
+          <NewsCard    news={news} />
         </div>
 
-        {/* Tournaments */}
-        {tournaments.length > 0 && (
-          <section>
-            <h2 className="section-title mb-6">🎯 Tournois</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tournaments.map(t => (
-                <div key={t.id} className="card p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`badge ${t.status === 'UPCOMING' ? 'bg-blue-500/10 text-blue-400' : t.status === 'ONGOING' ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-400'}`}>
-                      {t.status === 'UPCOMING' ? '⏳ À venir' : t.status === 'ONGOING' ? '🔴 En cours' : '✅ Terminé'}
-                    </span>
-                    <span className="text-xs text-gray-500">{t.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}</span>
-                  </div>
-                  <h3 className="font-bold mb-1">{t.name}</h3>
-                  <p className="text-gray-400 text-xs mb-3 line-clamp-2">{t.description}</p>
-                  {t.prizePool && <div className="text-yellow-500 font-bold text-sm">🏆 {t.prizePool}</div>}
-                  <div className="text-xs text-gray-500 mt-2">
-                    {format(new Date(t.startDate), 'dd MMM yyyy', { locale: fr })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Row 2 — 2 columns */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <FindTeamCard />
+          <LastMatchesCard matches={recentMatches} />
+        </div>
 
-        {/* Features */}
-        <section className="text-center">
-          <h2 className="section-title mb-10">Pourquoi Pokélo ?</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+        {/* Row 3 — Tournois full width */}
+        <TournoisBanner tournaments={tournaments} />
+
+        {/* Footer social */}
+        <div className="flex items-center justify-between pt-4 pb-2" style={{ borderTop: '1px solid rgba(255,203,5,0.1)' }}>
+          <div className="flex items-center gap-4">
             {[
-              { icon: '⚡', title: 'Matchmaking intelligent', desc: 'Trouvez des adversaires à votre niveau grâce à notre système Elo avec expansion dynamique.' },
-              { icon: '📊', title: 'Suivi de progression', desc: 'Graphique Elo, winrate, séries de victoires. Analysez votre évolution en détail.' },
-              { icon: '🛡️', title: 'Anti-smurf & équitable', desc: 'Système de détection, K-factor adaptatif et protection des nouveaux joueurs.' },
-            ].map(f => (
-              <div key={f.title} className="card p-6 text-center">
-                <div className="text-4xl mb-3">{f.icon}</div>
-                <h3 className="font-bold mb-2">{f.title}</h3>
-                <p className="text-gray-400 text-sm">{f.desc}</p>
-              </div>
+              { icon: '💬', label: 'Discord', color: '#5865F2' },
+              { icon: '🐦', label: 'Twitter', color: '#1DA1F2' },
+              { icon: '🎥', label: 'YouTube', color: '#FF0000' },
+            ].map(s => (
+              <button key={s.label} className="w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all hover:-translate-y-1 hover:scale-110"
+                style={{ background: `${s.color}20`, border: `1px solid ${s.color}40` }} title={s.label}>
+                {s.icon}
+              </button>
             ))}
           </div>
-        </section>
+          <div className="flex items-center gap-4 text-xs text-gray-600">
+            <a href="#" className="hover:text-gray-400 transition-colors">Mentions Légales</a>
+            <span>|</span>
+            <a href="#" className="hover:text-gray-400 transition-colors">Support</a>
+          </div>
+        </div>
       </div>
     </div>
   );
