@@ -5,6 +5,26 @@ import { useAuthStore } from '../store/authStore';
 import Avatar from '../components/ui/Avatar';
 import toast from 'react-hot-toast';
 
+// Redimensionne et compresse l'image côté client (max 400x400, JPEG 80%)
+function resizeImage(file, maxSize = 400, quality = 0.8) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob((blob) => resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' })), 'image/jpeg', quality);
+    };
+    img.src = url;
+  });
+}
+
 const REGIONS = ['EU', 'NA', 'ASIA', 'OCE', 'SA', 'MENA'];
 const ROLES   = ['Attaque', 'Défense', 'Support', 'Flex'];
 
@@ -84,9 +104,10 @@ export default function ProfileEdit() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Upload avatar first if changed
+      // Upload avatar first if changed (compress before sending)
       if (avatarFile) {
-        const res = await usersApi.uploadAvatar(avatarFile);
+        const compressed = await resizeImage(avatarFile);
+        const res = await usersApi.uploadAvatar(compressed);
         if (setUser) setUser({ ...me, avatarUrl: res.data.avatarUrl });
       }
 
