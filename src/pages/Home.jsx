@@ -46,7 +46,7 @@ function HeroSection({ user }) {
 
   return (
     <section className="relative overflow-hidden" style={{
-      backgroundImage: 'url(/bg.png)',
+      backgroundImage: 'url(/bg3.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center top',
       minHeight: 420,
