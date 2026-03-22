@@ -116,15 +116,20 @@ export const tournamentsApi = {
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
 export const adminApi = {
-  dashboard:      ()           => api.get('/admin/dashboard'),
-  listUsers:      (params)     => api.get('/admin/users', { params }),
-  banUser:        (id, data)   => api.patch(`/admin/users/${id}/ban`, data),
-  unbanUser:      (id)         => api.patch(`/admin/users/${id}/unban`),
-  listDisputes:   (params)     => api.get('/admin/disputes', { params }),
-  resolveDispute: (id, data)   => api.patch(`/admin/disputes/${id}`, data),
-  listReports:    ()           => api.get('/admin/reports'),
-  resolveReport:  (id)         => api.patch(`/admin/reports/${id}`),
-  overrideMatch:  (id, winner) => api.post(`/admin/matches/${id}/override`, { winnerTeam: winner }),
+  dashboard:      ()              => api.get('/admin/dashboard'),
+  listUsers:      (params)        => api.get('/admin/users', { params }),
+  banUser:        (id, data)      => api.patch(`/admin/users/${id}/ban`, data),
+  unbanUser:      (id)            => api.patch(`/admin/users/${id}/unban`),
+  updateUserRole: (id, role)      => api.patch(`/admin/users/${id}/role`, { role }),
+  listDisputes:   (params)        => api.get('/admin/disputes', { params }),
+  resolveDispute: (id, data)      => api.patch(`/admin/disputes/${id}`, data),
+  listReports:    (params)        => api.get('/admin/reports', { params }),
+  resolveReport:  (id)            => api.patch(`/admin/reports/${id}`),
+  overrideMatch:  (id, winner)    => api.post(`/admin/matches/${id}/override`, { winnerTeam: winner }),
+  listAllNews:    ()              => api.get('/admin/news'),
+  createNews:     (data)          => api.post('/admin/news', data),
+  updateNews:     (id, data)      => api.patch(`/admin/news/${id}`, data),
+  deleteNews:     (id)            => api.delete(`/admin/news/${id}`),
 };
 
 export default api;

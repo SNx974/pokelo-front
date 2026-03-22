@@ -15,7 +15,7 @@ import { useAuthStore } from './store/authStore';
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
-  if (adminOnly && user.role !== 'ADMIN') return <Navigate to="/" replace />;
+  if (adminOnly && !['ADMIN', 'MODERATOR'].includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 
