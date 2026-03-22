@@ -172,8 +172,8 @@ function ReceivedInvitations({ onAccepted }) {
 
 // ─── Formulaire de création ───────────────────────────────────────────────────
 
-function CreateTeamForm({ onCreated }) {
-  const [form, setForm] = useState({ name: '', tag: '', description: '', region: 'EU', mode: 'FIVE_V_FIVE' });
+function CreateTeamForm({ onCreated, defaultMode = null }) {
+  const [form, setForm] = useState({ name: '', tag: '', description: '', region: 'EU', mode: defaultMode || 'FIVE_V_FIVE' });
   const [loading, setLoading] = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -190,15 +190,14 @@ function CreateTeamForm({ onCreated }) {
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="text-center mb-8">
-        <div className="text-6xl mb-4">🛡️</div>
-        <h2 className="font-display font-bold text-3xl mb-2">Créer une équipe</h2>
-        <p className="text-gray-400">Fondez votre équipe et recrutez les meilleurs joueurs.</p>
+    <div>
+      <div className="text-center mb-6">
+        <div className="text-4xl mb-3">🛡️</div>
+        <h2 className="font-bold text-xl mb-1">Créer une équipe {MODE_LABELS[form.mode]}</h2>
+        <p className="text-gray-400 text-sm">Fondez votre équipe et recrutez des joueurs.</p>
       </div>
 
-      <div className="card p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <label className="text-xs text-gray-400 mb-1.5 block">Nom de l'équipe *</label>
@@ -233,18 +232,20 @@ function CreateTeamForm({ onCreated }) {
             <div className="text-xs text-gray-600 mt-1">{form.description.length}/200</div>
           </div>
 
-          <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">Mode de jeu</label>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(MODE_LABELS).map(([key, label]) => (
-                <button key={key} type="button" onClick={() => set('mode', key)}
-                  className={`py-3 rounded-xl text-sm font-bold transition-all border ${form.mode === key ? 'border-yellow-500 bg-yellow-500/15 text-yellow-500' : 'border-dark-300 text-gray-400 hover:border-dark-400'}`}>
-                  <div className="text-2xl mb-1">{key === 'TWO_V_TWO' ? '2⚔️2' : '5⚔️5'}</div>
-                  {label} — {TEAM_SIZES[key]} joueurs
-                </button>
-              ))}
+          {!defaultMode && (
+            <div>
+              <label className="text-xs text-gray-400 mb-1.5 block">Mode de jeu</label>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(MODE_LABELS).map(([key, label]) => (
+                  <button key={key} type="button" onClick={() => set('mode', key)}
+                    className={`py-3 rounded-xl text-sm font-bold transition-all border ${form.mode === key ? 'border-yellow-500 bg-yellow-500/15 text-yellow-500' : 'border-dark-300 text-gray-400 hover:border-dark-400'}`}>
+                    <div className="text-2xl mb-1">{key === 'TWO_V_TWO' ? '2⚔️2' : '5⚔️5'}</div>
+                    {label} — {TEAM_SIZES[key]} joueurs
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Région</label>
@@ -263,7 +264,6 @@ function CreateTeamForm({ onCreated }) {
             {loading ? 'Création...' : '⚔️ Créer l\'équipe'}
           </button>
         </form>
-      </div>
     </div>
   );
 }
@@ -582,11 +582,46 @@ function TeamView({ team, role, onRefresh }) {
   );
 }
 
+// ─── Panel pour un mode (2v2 ou 5v5) ─────────────────────────────────────────
+
+function ModePanel({ mode, teamData, onRefresh }) {
+  const modeLabel = MODE_LABELS[mode];
+  const teamEntry = teamData?.[mode]; // { team, role } ou null
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,203,5,0.15)', background: 'rgba(13,31,60,0.5)' }}>
+      {/* En-tête du panel */}
+      <div className="px-5 py-4 flex items-center gap-3" style={{ background: 'rgba(255,203,5,0.05)', borderBottom: '1px solid rgba(255,203,5,0.12)' }}>
+        <span className="text-2xl">{mode === 'TWO_V_TWO' ? '⚔️' : '🎮'}</span>
+        <div>
+          <h2 className="font-bold text-lg" style={{ color: '#FFCB05' }}>{modeLabel}</h2>
+          <p className="text-xs text-gray-500">{TEAM_SIZES[mode]} joueurs par équipe</p>
+        </div>
+        {teamEntry && (
+          <span className="ml-auto text-xs px-2 py-1 rounded-full font-semibold" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>
+            Équipe active
+          </span>
+        )}
+      </div>
+
+      {/* Contenu */}
+      <div className="p-5">
+        {teamEntry ? (
+          <TeamView team={teamEntry.team} role={teamEntry.role} onRefresh={onRefresh} />
+        ) : (
+          <CreateTeamForm onCreated={onRefresh} defaultMode={mode} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function TeamManage() {
   const { user } = useAuthStore();
-  const [teamData, setTeamData] = useState(null); // { team, role }
+  // teamData = { TWO_V_TWO: { team, role } | null, FIVE_V_FIVE: { team, role } | null }
+  const [teamData, setTeamData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -600,28 +635,29 @@ export default function TeamManage() {
     load();
     const offKicked    = onWS('TEAM_KICKED',    () => load());
     const offDissolved = onWS('TEAM_DISSOLVED', () => load());
-    return () => { offKicked(); offDissolved(); };
+    const offAccepted  = onWS('TEAM_INVITE_ACCEPTED', () => load());
+    return () => { offKicked(); offDissolved(); offAccepted(); };
   }, []);
 
   if (loading) return <div className="flex justify-center py-32"><LoadingSpinner size="lg" /></div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 animate-fade-in">
+    <div className="max-w-5xl mx-auto px-4 py-10 animate-fade-in">
       <div className="mb-8">
         <h1 className="font-display font-bold text-4xl mb-1">
-          <span className="text-gradient-yellow">Mon équipe</span>
+          <span className="text-gradient-yellow">Mes équipes</span>
         </h1>
-        <p className="text-gray-400 text-sm">Gérez votre équipe, invitez des joueurs et évoluez ensemble.</p>
+        <p className="text-gray-400 text-sm">Gérez vos équipes 2v2 et 5v5 indépendamment.</p>
       </div>
 
       {/* Invitations reçues — toujours affichées en haut */}
       <ReceivedInvitations onAccepted={load} />
 
-      {teamData?.team ? (
-        <TeamView team={teamData.team} role={teamData.role} onRefresh={load} />
-      ) : (
-        <CreateTeamForm onCreated={load} />
-      )}
+      {/* Deux panels côte à côte */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <ModePanel mode="TWO_V_TWO"   teamData={teamData} onRefresh={load} />
+        <ModePanel mode="FIVE_V_FIVE" teamData={teamData} onRefresh={load} />
+      </div>
     </div>
   );
 }

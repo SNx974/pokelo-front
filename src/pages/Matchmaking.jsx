@@ -36,14 +36,15 @@ export default function Matchmaking() {
   const [myTeam, setMyTeam] = useState(null);
   const [teamOnline, setTeamOnline] = useState({});
 
-  // Chargement du statut online de l'équipe
+  // Chargement du statut online de l'équipe active (selon le mode sélectionné)
   const refreshTeamOnline = useCallback(() => {
-    if (myTeam?.team?.id) {
-      teamsApi.onlineStatus(myTeam.team.id)
+    const teamId = myTeam?.[selectedMode]?.team?.id;
+    if (teamId) {
+      teamsApi.onlineStatus(teamId)
         .then(({ data }) => setTeamOnline(data))
         .catch(() => {});
     }
-  }, [myTeam?.team?.id]);
+  }, [myTeam, selectedMode]);
 
   useEffect(() => {
     checkStatus();
@@ -52,20 +53,24 @@ export default function Matchmaking() {
 
     // Vérifie si le joueur a un match en cours
     matchmakingApi.activeMatch().then(r => setActiveMatch(r.data.match)).catch(() => {});
-    // Charge l'équipe du joueur
+    // Charge les équipes du joueur
     teamsApi.my().then(r => setMyTeam(r.data)).catch(() => {});
 
     return () => clearInterval(interval);
   }, []);
 
+  // Équipe du mode sélectionné (myTeam est maintenant { TWO_V_TWO: ..., FIVE_V_FIVE: ... })
+  const currentTeamEntry = selectedType === 'TEAM' ? myTeam?.[selectedMode] : null;
+  const currentTeam = currentTeamEntry?.team || null;
+
   // Rafraîchit le statut online quand on passe en Team Queue
   useEffect(() => {
-    if (selectedType === 'TEAM' && myTeam?.team) {
+    if (selectedType === 'TEAM' && currentTeam) {
       refreshTeamOnline();
       const iv = setInterval(refreshTeamOnline, 10_000);
       return () => clearInterval(iv);
     }
-  }, [selectedType, myTeam?.team?.id, refreshTeamOnline]);
+  }, [selectedType, currentTeam?.id, refreshTeamOnline]);
 
   useEffect(() => {
     if (matchFound) {
@@ -75,7 +80,8 @@ export default function Matchmaking() {
 
   const handleJoin = async () => {
     setJoining(true);
-    const res = await joinQueue(selectedMode, selectedType);
+    const teamId = selectedType === 'TEAM' ? currentTeam?.id : null;
+    const res = await joinQueue(selectedMode, selectedType, teamId);
     setJoining(false);
     if (!res.success) alert(res.error);
   };
@@ -215,14 +221,14 @@ export default function Matchmaking() {
       </div>
 
       {/* Team online status (Team Queue only) */}
-      {selectedType === 'TEAM' && myTeam?.team && (
+      {selectedType === 'TEAM' && currentTeam && (
         <div className="card p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-sm">Statut de l'équipe: <span style={{ color: '#FFCB05' }}>{myTeam.team.name}</span></h3>
+            <h3 className="font-bold text-sm">Statut de l'équipe: <span style={{ color: '#FFCB05' }}>{currentTeam.name}</span></h3>
             <button onClick={refreshTeamOnline} className="text-xs text-gray-500 hover:text-gray-300">↻ Rafraîchir</button>
           </div>
           <div className="space-y-2">
-            {(myTeam.team.members || []).map(m => {
+            {(currentTeam.members || []).map(m => {
               const isOnline = !!teamOnline[m.userId];
               return (
                 <div key={m.userId} className="flex items-center gap-2">
@@ -242,9 +248,12 @@ export default function Matchmaking() {
         </div>
       )}
 
-      {selectedType === 'TEAM' && !myTeam?.team && (
+      {selectedType === 'TEAM' && !currentTeam && (
         <div className="card p-4 mb-6 border-yellow-500/20">
-          <p className="text-sm text-yellow-500 text-center">⚠️ Vous n'avez pas d'équipe. <Link to="/team/manage" className="underline">Créer ou rejoindre une équipe</Link></p>
+          <p className="text-sm text-yellow-500 text-center">
+            ⚠️ Vous n'avez pas d'équipe {selectedMode === 'TWO_V_TWO' ? '2v2' : '5v5'}.{' '}
+            <Link to="/team/manage" className="underline">Créer une équipe</Link>
+          </p>
         </div>
       )}
 
@@ -255,14 +264,13 @@ export default function Matchmaking() {
           <span className="font-bold text-yellow-500">{selectedMode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {selectedType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}</span>
         </div>
         {(() => {
-          // Vérifications pour Team Queue
-          const noTeam = selectedType === 'TEAM' && !myTeam?.team;
-          const hasOffline = selectedType === 'TEAM' && myTeam?.team && Object.values(teamOnline).some(v => !v);
+          const noTeam = selectedType === 'TEAM' && !currentTeam;
+          const hasOffline = selectedType === 'TEAM' && currentTeam && Object.values(teamOnline).some(v => !v);
           const teamSize = selectedMode === 'TWO_V_TWO' ? 2 : 5;
-          const notEnoughMembers = selectedType === 'TEAM' && myTeam?.team && (myTeam.team.members?.length || 0) < teamSize;
+          const notEnoughMembers = selectedType === 'TEAM' && currentTeam && (currentTeam.members?.length || 0) < teamSize;
           const disabled = joining || noTeam || hasOffline || notEnoughMembers;
-          const reason = noTeam ? 'Vous n\'avez pas d\'équipe'
-            : notEnoughMembers ? `Il faut ${teamSize} membres (${myTeam.team.members?.length}/${teamSize})`
+          const reason = noTeam ? `Vous n'avez pas d'équipe ${selectedMode === 'TWO_V_TWO' ? '2v2' : '5v5'}`
+            : notEnoughMembers ? `Il faut ${teamSize} membres (${currentTeam.members?.length}/${teamSize})`
             : hasOffline ? 'Des membres sont hors ligne'
             : null;
           return (
