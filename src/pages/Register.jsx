@@ -33,7 +33,7 @@ export default function Register() {
     setErrors({});
     const res = await register({ username: form.username, email: form.email, password: form.password, region: form.region });
     if (res.success) navigate('/');
-    else setErrors({ global: res.error });
+    else setErrors({ global: res.error || 'Erreur lors de la création du compte. Réessaie.' });
   };
 
   const f = (field) => ({ value: form[field], onChange: e => { setForm(p => ({ ...p, [field]: e.target.value })); setErrors(p => ({ ...p, [field]: undefined })); } });

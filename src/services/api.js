@@ -25,10 +25,11 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    // Only toast on 4xx client errors (not network/server errors)
     const status = err.response?.status;
-    if (status && status >= 400 && status < 500 && status !== 401) {
+    if (status && status >= 400 && status !== 401) {
       toast.error(msg);
+    } else if (!status) {
+      toast.error('Impossible de joindre le serveur. Vérifie ta connexion.');
     }
     return Promise.reject(err);
   },
