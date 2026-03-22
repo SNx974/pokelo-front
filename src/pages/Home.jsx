@@ -53,8 +53,10 @@ function HeroSection({ user }) {
     }}>
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Assombrissement général pour la lisibilité */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,13,26,0.55) 0%, rgba(5,13,26,0.45) 60%, rgba(5,13,26,0.75) 100%)' }} />
+        {/* Assombrissement général */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,13,26,0.45) 0%, rgba(5,13,26,0.35) 50%, rgba(5,13,26,0.0) 80%)' }} />
+        {/* Fondu bas — masque la démarcation */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, background: 'linear-gradient(to bottom, transparent 0%, rgba(5,13,26,0.7) 50%, rgba(5,13,26,1) 100%)' }} />
         {/* Side lights */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top left, rgba(255,203,5,0.08) 0%, transparent 70%)' }} />
         <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '200px', background: 'radial-gradient(ellipse at top right, rgba(255,100,50,0.07) 0%, transparent 70%)' }} />
