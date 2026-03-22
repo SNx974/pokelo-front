@@ -80,32 +80,37 @@ function HeroSection({ user }) {
 
         {/* Queue cards */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
-          {/* Solo Queue — avec Lucario au-dessus */}
-          <div className="flex flex-col">
-            <div className="flex justify-center mb-2" style={{ marginBottom: '-10px', zIndex: 1, position: 'relative' }}>
-              <img src="/lucario.png" alt="Lucario" style={{ height: 160, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(42,117,187,0.7))' }} />
+          {/* Solo Queue — Lucario en superposition */}
+          <div
+            role="button" tabIndex={0}
+            onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
+            onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
+            className={`queue-card queue-card-solo text-left p-5 relative overflow-visible ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
+            {/* Lucario superposé sur le coin droit */}
+            <img
+              src="/lucario.png" alt="Lucario"
+              style={{
+                position: 'absolute', bottom: 0, right: -10,
+                height: 170, width: 'auto', objectFit: 'contain',
+                filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))',
+                pointerEvents: 'none', zIndex: 2,
+              }}
+            />
+            <div style={{ position: 'relative', zIndex: 3 }}>
+              <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
+              <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
+              <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
             </div>
-            <div
-              role="button" tabIndex={0}
-              onClick={() => { setSelectedMode('SOLO'); setSelectedFormat('TWO_V_TWO'); }}
-              onKeyDown={e => e.key === 'Enter' && setSelectedMode('SOLO')}
-              className={`queue-card queue-card-solo text-left p-5 ${selectedMode === 'SOLO' ? 'selected-solo' : ''}`}>
-              <div>
-                <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
-                <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
-                <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
+            {selectedMode === 'SOLO' && (
+              <div className="mt-3 flex gap-2" style={{ position: 'relative', zIndex: 3 }}>
+                {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
+                  <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
+                    {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
+                  </span>
+                ))}
               </div>
-              {selectedMode === 'SOLO' && (
-                <div className="mt-3 flex gap-2">
-                  {['TWO_V_TWO', 'FIVE_V_FIVE'].map(f => (
-                    <span key={f} role="button" tabIndex={0} onClick={e => { e.stopPropagation(); setSelectedFormat(f); }}
-                      className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer select-none ${selectedFormat === f ? 'bg-yellow-500 text-navy' : 'bg-white/10 text-gray-300'}`}>
-                      {f === 'TWO_V_TWO' ? '2v2' : '5v5'}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           {/* Team Queue */}
