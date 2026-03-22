@@ -204,7 +204,7 @@ export default function ProfileEdit() {
         </div>
 
         {/* Pokémon favori */}
-        <div className="card p-6">
+        <div className="card p-6" style={{ overflow: 'visible' }}>
           <h2 className="font-bold mb-4 text-yellow-500 uppercase tracking-wider text-xs">Pokémon Favori</h2>
           <div className="relative">
             <input
