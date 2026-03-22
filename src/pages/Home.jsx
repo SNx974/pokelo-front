@@ -439,7 +439,9 @@ export default function Home() {
       <HeroSection user={user} />
 
       {/* Dashboard grid */}
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-5">
+      <div style={{ backgroundImage: 'url(/bg2.png)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,13,26,0.82)' }} />
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* Row 1 — 3 columns */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -477,6 +479,7 @@ export default function Home() {
             <a href="#" className="hover:text-gray-400 transition-colors">Support</a>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
