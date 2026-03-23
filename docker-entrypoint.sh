@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Valeur par défaut si BACKEND_URL non définie
-BACKEND_URL="${BACKEND_URL:-http://localhost:3001}"
+# Valeur par défaut si BACKEND_URL non définie + export obligatoire pour envsubst
+export BACKEND_URL="${BACKEND_URL:-http://localhost:3001}"
 
 echo "[Pokélo] BACKEND_URL = $BACKEND_URL"
 
