@@ -19,9 +19,10 @@ api.interceptors.response.use(
   (err) => {
     const msg = err.response?.data?.error || err.message || 'Erreur réseau';
     if (err.response?.status === 401) {
+      const hadToken = !!localStorage.getItem('pokelo_token');
       localStorage.removeItem('pokelo_token');
       localStorage.removeItem('pokelo_user');
-      if (!window.location.pathname.includes('/login')) {
+      if (hadToken && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }
