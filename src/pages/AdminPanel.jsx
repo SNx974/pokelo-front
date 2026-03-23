@@ -554,7 +554,7 @@ function News() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editModal, setEditModal] = useState(null); // null | 'new' | article
-  const [form, setForm] = useState({ title: '', content: '', coverImage: '', isPinned: false, isPublished: false });
+  const [form, setForm] = useState({ title: '', content: '', coverImage: '', isPinned: false, pinnedDuration: '', isPublished: false });
 
   const load = () => {
     setLoading(true);
@@ -563,12 +563,12 @@ function News() {
   useEffect(() => { load(); }, []);
 
   const openNew = () => {
-    setForm({ title: '', content: '', coverImage: '', isPinned: false, isPublished: false });
+    setForm({ title: '', content: '', coverImage: '', isPinned: false, pinnedDuration: '', isPublished: false });
     setEditModal('new');
   };
 
   const openEdit = (a) => {
-    setForm({ title: a.title, content: a.content, coverImage: a.coverImage || '', isPinned: a.isPinned, isPublished: a.isPublished });
+    setForm({ title: a.title, content: a.content, coverImage: a.coverImage || '', isPinned: a.isPinned, pinnedDuration: '', isPublished: a.isPublished });
     setEditModal(a);
   };
 
@@ -620,7 +620,12 @@ function News() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-bold truncate">{a.title}</span>
-                    {a.isPinned    && <Badge color="yellow">📌 Épinglé</Badge>}
+                    {a.isPinned && <Badge color="yellow">📌 Épinglé</Badge>}
+                    {a.isPinned && a.pinnedUntil && (() => {
+                      const mins = Math.max(0, Math.round((new Date(a.pinnedUntil) - Date.now()) / 60000));
+                      const h = Math.floor(mins / 60), m = mins % 60;
+                      return <Badge color="orange">⏱ {h > 0 ? `${h}h` : ''}{m}min</Badge>;
+                    })()}
                     {a.isPublished ? <Badge color="green">Publié</Badge> : <Badge color="gray">Brouillon</Badge>}
                   </div>
                   <p className="text-sm text-gray-400 line-clamp-2">{a.content}</p>
@@ -661,16 +666,34 @@ function News() {
               <label className="text-xs text-gray-400 mb-1 block">Image de couverture (URL, optionnel)</label>
               <input value={form.coverImage} onChange={e => setForm(f => ({ ...f, coverImage: e.target.value }))} className="input w-full" placeholder="https://..." />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <label className="flex items-center gap-2 cursor-pointer text-sm">
                 <input type="checkbox" checked={form.isPublished} onChange={e => setForm(f => ({ ...f, isPublished: e.target.checked }))} className="rounded" />
                 Publier maintenant
               </label>
               <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" checked={form.isPinned} onChange={e => setForm(f => ({ ...f, isPinned: e.target.checked }))} className="rounded" />
+                <input type="checkbox" checked={form.isPinned} onChange={e => setForm(f => ({ ...f, isPinned: e.target.checked, pinnedDuration: e.target.checked ? f.pinnedDuration : '' }))} className="rounded" />
                 Épingler
               </label>
             </div>
+            {form.isPinned && (
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Durée de mise en avant</label>
+                <select
+                  value={form.pinnedDuration}
+                  onChange={e => setForm(f => ({ ...f, pinnedDuration: e.target.value }))}
+                  className="input w-full"
+                >
+                  <option value="">Permanent</option>
+                  <option value="1">1 heure</option>
+                  <option value="2">2 heures</option>
+                  <option value="3">3 heures</option>
+                  <option value="6">6 heures</option>
+                  <option value="12">12 heures</option>
+                  <option value="24">24 heures</option>
+                </select>
+              </div>
+            )}
             <div className="flex gap-3 pt-1">
               <button onClick={doSave} className="btn-primary flex-1">Enregistrer</button>
               <button onClick={() => setEditModal(null)} className="btn-secondary flex-1">Annuler</button>
