@@ -15,18 +15,25 @@ import AdminPanel from './pages/AdminPanel';
 import { useAuthStore } from './store/authStore';
 
 function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, token } = useAuthStore();
+  const { user, token, initializing } = useAuthStore();
+  if (initializing) return null;
   if (!token || !user) return <Navigate to="/login" replace />;
   if (adminOnly && !['ADMIN', 'MODERATOR'].includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 
 export default function App() {
-  const { initAuth } = useAuthStore();
+  const { initAuth, initializing } = useAuthStore();
 
   useEffect(() => {
     initAuth();
   }, [initAuth]);
+
+  if (initializing) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#050d1a]">
+      <div className="w-10 h-10 rounded-full border-2 border-[#FFCB05] border-t-transparent animate-spin" />
+    </div>
+  );
 
   return (
     <Routes>

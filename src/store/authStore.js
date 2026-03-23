@@ -8,18 +8,19 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   token: null,
   loading: false,
+  initializing: true,
   wsConnected: false,
 
   initAuth: async () => {
     const token = localStorage.getItem('pokelo_token');
-    if (!token) return;
+    if (!token) { set({ initializing: false }); return; }
     try {
       const { data } = await authApi.me();
-      set({ user: data, token });
+      set({ user: data, token, initializing: false });
       connectWS(token, (msg) => get().handleWSMessage(msg));
     } catch {
       localStorage.removeItem('pokelo_token');
-      set({ user: null, token: null });
+      set({ user: null, token: null, initializing: false });
     }
   },
 
