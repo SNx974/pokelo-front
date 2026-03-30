@@ -188,7 +188,7 @@ function HeroSection({ user }) {
                 style={{ position: 'absolute', bottom: 0, right: 0, height: 260, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(42,117,187,0.8))', pointerEvents: 'none', zIndex: 10 }} />
               <div style={{ position: 'relative', zIndex: 3 }}>
                 <div className="font-bebas text-3xl tracking-wider text-white mb-1" style={{ textShadow: '0 0 20px rgba(42,117,187,0.8)' }}>Solo Queue</div>
-                <div className="text-blue-400 font-bold text-sm">1 vs 1 — 2v2 & 5v5</div>
+                <div className="text-blue-400 font-bold text-sm">2v2 & 5v5</div>
                 <p className="text-gray-400 text-xs mt-2">Affrontez des joueurs seul.<br />Matchmaking basé sur votre Elo.</p>
               </div>
               {selectedMode === 'SOLO' && (
