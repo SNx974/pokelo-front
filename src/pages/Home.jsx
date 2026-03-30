@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ladderApi, newsApi, tournamentsApi, matchesApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { useMatchmakingStore } from '../store/matchmakingStore';
+import LobbyPreview from '../components/queue/LobbyPreview';
 import Avatar from '../components/ui/Avatar';
 import RankBadge from '../components/ui/RankBadge';
 import { format } from 'date-fns';
@@ -38,7 +39,7 @@ function QueueTimer({ seconds }) {
 function HeroSection({ user }) {
   const navigate = useNavigate();
   const {
-    inQueue, queueEntry, waitTime, queueInfo,
+    inQueue, queueEntry, waitTime, queueInfo, queueSlots, matchFound,
     joinQueue, leaveQueue, fetchQueueInfo, checkStatus,
   } = useMatchmakingStore();
   const [selectedMode, setSelectedMode] = useState('SOLO');
@@ -96,7 +97,7 @@ function HeroSection({ user }) {
             padding: '2.5rem 3rem',
             boxShadow: '0 0 60px rgba(255,203,5,0.08), 0 8px 32px rgba(0,0,0,0.5)',
             minWidth: 340,
-            maxWidth: 480,
+            maxWidth: queueEntry?.mode === 'FIVE_V_FIVE' ? 760 : 520,
             width: '100%',
           }}>
             {/* Spinner avec avatar */}
@@ -127,26 +128,13 @@ function HeroSection({ user }) {
             {/* Séparateur */}
             <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,203,5,0.2), transparent)', margin: '0 0 1.5rem' }} />
 
-            {/* Stats */}
-            <div className="flex justify-center gap-8 mb-6">
-              <div className="text-center">
-                <div className="font-display font-bold text-2xl" style={{ color: '#FFCB05', textShadow: '0 0 12px rgba(255,203,5,0.5)' }}>{playersInQueue}</div>
-                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>En file</div>
-              </div>
-              <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              <div className="text-center">
-                <div className="font-display font-bold text-2xl text-blue-400" style={{ textShadow: '0 0 12px rgba(42,117,187,0.5)' }}>
-                  {queueEntry?.mode === 'TWO_V_TWO' ? user?.elo2v2 : user?.elo5v5}
-                </div>
-                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>Votre Elo</div>
-              </div>
-              <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              <div className="text-center">
-                <div className="font-display font-bold text-2xl text-green-400" style={{ textShadow: '0 0 12px rgba(74,222,128,0.5)' }}>
-                  {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}
-                </div>
-                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>Format</div>
-              </div>
+            {/* Lobby Preview */}
+            <div className="mb-6">
+              <LobbyPreview
+                mode={queueEntry?.mode || 'TWO_V_TWO'}
+                queueSlots={queueSlots}
+                matchFound={matchFound}
+              />
             </div>
 
             {/* Leave button */}

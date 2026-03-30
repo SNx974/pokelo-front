@@ -8,6 +8,7 @@ export const useMatchmakingStore = create((set, get) => ({
   queueEntry: null,
   waitTime: 0,
   matchFound: null,
+  queueSlots: 0,
   queueInfo: { TWO_V_TWO: { SOLO: 0, TEAM: 0 }, FIVE_V_FIVE: { SOLO: 0, TEAM: 0 } },
   timer: null,
 
@@ -15,11 +16,14 @@ export const useMatchmakingStore = create((set, get) => ({
     try {
       const { data } = await matchmakingApi.join({ mode, queueType, teamId });
       const timer = setInterval(() => set(s => ({ waitTime: s.waitTime + 1 })), 1000);
-      set({ inQueue: true, queueEntry: data, waitTime: 0, timer });
+      set({ inQueue: true, queueEntry: data, waitTime: 0, timer, queueSlots: 1 });
 
-      // Listen for match found via WS
       onWS('MATCH_FOUND', (matchData) => {
         get().onMatchFound(matchData);
+      });
+
+      onWS('QUEUE_SLOTS_UPDATE', (data) => {
+        set({ queueSlots: data.count });
       });
 
       return { success: true };
@@ -33,7 +37,7 @@ export const useMatchmakingStore = create((set, get) => ({
       await matchmakingApi.leave();
       const { timer } = get();
       if (timer) clearInterval(timer);
-      set({ inQueue: false, queueEntry: null, waitTime: 0, timer: null });
+      set({ inQueue: false, queueEntry: null, waitTime: 0, timer: null, queueSlots: 0 });
       toast.success('File d\'attente quittée');
     } catch {}
   },
@@ -41,7 +45,7 @@ export const useMatchmakingStore = create((set, get) => ({
   onMatchFound: (matchData) => {
     const { timer } = get();
     if (timer) clearInterval(timer);
-    set({ inQueue: false, matchFound: matchData, timer: null });
+    set({ inQueue: false, matchFound: matchData, queueSlots: 0, timer: null });
   },
 
   fetchQueueInfo: async () => {
@@ -63,6 +67,6 @@ export const useMatchmakingStore = create((set, get) => ({
   reset: () => {
     const { timer } = get();
     if (timer) clearInterval(timer);
-    set({ inQueue: false, queueEntry: null, waitTime: 0, matchFound: null, timer: null });
+    set({ inQueue: false, queueEntry: null, waitTime: 0, matchFound: null, queueSlots: 0, timer: null });
   },
 }));
