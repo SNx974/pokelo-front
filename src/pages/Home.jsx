@@ -112,49 +112,50 @@ function HeroSection({ user }) {
               </div>
             </div>
 
-            <h2 className="font-bebas text-4xl tracking-wider mb-1" style={{ color: '#FFCB05' }}>
-              Recherche d'adversaires...
+            <h2 className="font-display font-bold text-2xl tracking-widest uppercase mb-1"
+              style={{ background: 'linear-gradient(90deg, #FFCB05, #FFD740, #F59E0B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '0.15em' }}>
+              Recherche d'adversaires
             </h2>
-            <p className="text-gray-400 mb-5 text-sm font-semibold">
+            <p className="mb-5 text-xs font-display font-semibold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em' }}>
               {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'} · {queueEntry?.queueType === 'SOLO' ? 'Solo Queue' : 'Team Queue'}
             </p>
 
             {/* Timer */}
             <QueueTimer seconds={waitTime} />
-            <p className="text-gray-500 text-xs mt-1 mb-6">Temps d'attente</p>
+            <p className="font-display text-xs tracking-widest uppercase mt-1 mb-6" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.25em' }}>Temps d'attente</p>
 
             {/* Séparateur */}
-            <div style={{ height: 1, background: 'rgba(255,203,5,0.12)', margin: '0 0 1.5rem' }} />
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,203,5,0.2), transparent)', margin: '0 0 1.5rem' }} />
 
             {/* Stats */}
             <div className="flex justify-center gap-8 mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold font-mono" style={{ color: '#FFCB05' }}>{playersInQueue}</div>
-                <div className="text-xs text-gray-500 mt-0.5">En file</div>
+                <div className="font-display font-bold text-2xl" style={{ color: '#FFCB05', textShadow: '0 0 12px rgba(255,203,5,0.5)' }}>{playersInQueue}</div>
+                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>En file</div>
               </div>
               <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
               <div className="text-center">
-                <div className="text-2xl font-bold font-mono text-blue-400">
+                <div className="font-display font-bold text-2xl text-blue-400" style={{ textShadow: '0 0 12px rgba(42,117,187,0.5)' }}>
                   {queueEntry?.mode === 'TWO_V_TWO' ? user?.elo2v2 : user?.elo5v5}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">Votre Elo</div>
+                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>Votre Elo</div>
               </div>
               <div className="w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
               <div className="text-center">
-                <div className="text-2xl font-bold font-mono text-green-400">
+                <div className="font-display font-bold text-2xl text-green-400" style={{ textShadow: '0 0 12px rgba(74,222,128,0.5)' }}>
                   {queueEntry?.mode === 'TWO_V_TWO' ? '2v2' : '5v5'}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">Format</div>
+                <div className="font-display text-xs tracking-widest uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>Format</div>
               </div>
             </div>
 
             {/* Leave button */}
             <button
               onClick={leaveQueue}
-              className="w-full py-3 rounded-xl font-bebas text-lg tracking-widest uppercase transition-all hover:scale-105"
-              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}
+              className="w-full py-3 rounded-xl font-display font-bold text-sm tracking-widest uppercase transition-all hover:scale-105"
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'rgba(248,113,113,0.85)', letterSpacing: '0.2em' }}
             >
-              ✕ Quitter la file
+              Quitter la file
             </button>
           </div>
         </div>
